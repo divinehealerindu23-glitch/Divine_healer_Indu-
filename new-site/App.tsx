@@ -3,6 +3,7 @@ import { MoonStar, Sparkles, Phone, MessageCircle, MapPin, Clock, Heart, Coins, 
 const tarotImage = "/images/Taro%20Cards.jpg";
 const crystalHealingImage = "/images/Cristel%20Healing.jpg";
 const mantraHealingImage = "/images/Maa%20tripursundari.jpg";
+const akashicReadingImage = "/images/Akashic%20Reading.jpg";
 const profileImage = "/images/Divine%20Healer%20Indu.jpeg";
 
 const PHONE_DISPLAY = "8920702407";
@@ -15,7 +16,7 @@ const services: Service[] = [
   { name: "Tarot Card Reading", icon: <Eye size={24} />, desc: "Clear, compassionate insight for the question on your heart.", tag: "Clarity", image: tarotImage, imageAlt: "Tarot cards for a spiritual reading" },
   { name: "Crystal Healing", icon: <Sparkles size={24} />, desc: "A crystal-focused healing experience to support calm, balance, and intention.", tag: "Energy Healing", image: crystalHealingImage, imageAlt: "Crystal healing" },
   { name: "Mantra Healing", icon: <Flower2 size={24} />, desc: "A devotional mantra healing practice inspired by Maa Tripurasundari.", tag: "Mantra", image: mantraHealingImage, imageAlt: "Maa Tripurasundari" },
-  { name: "Akashic Reading", icon: <BookOpen size={24} />, desc: "Gentle guidance from your soul’s deeper story and lessons.", tag: "Soul Path" },
+  { name: "Akashic Reading", icon: <BookOpen size={24} />, desc: "Gentle guidance from your soul’s deeper story and lessons.", tag: "Soul Path", image: akashicReadingImage, imageAlt: "Akashic reading" },
   { name: "Money Healing", icon: <Coins size={24} />, desc: "Release blocks around abundance and welcome steady flow.", tag: "Abundance" },
   { name: "Love & Marriage Healing", icon: <Heart size={24} />, desc: "Heal the bond, restore trust, and nurture lasting closeness.", tag: "Relationships" },
   { name: "Health Healing", icon: <Activity size={24} />, desc: "Supportive energy work for balance, rest, and vitality.", tag: "Wellbeing" },
