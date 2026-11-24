@@ -8,7 +8,7 @@ export default async function handler(req, res) {
 
   try {
     const { name, phone, service, message = "" } = req.body || {};
-    const clean = (value, max = 1000) => String(value || "").trim().replace(/[\\u0000-\\u001F\\u007F]/g, "").slice(0, max);
+    const clean = (value, max = 1000) => String(value || "").trim().replace(/[\u0000-\u001F\u007F]/g, "").slice(0, max);
     const booking = {
       name: clean(name, 120),
       phone: clean(phone, 40),
@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     if (!booking.name || !booking.phone || !booking.service) {
       return res.status(400).json({ success: false, error: "Please provide your name, phone number, and service." });
     }
-    if (booking.phone.replace(/\\D/g, "").length < 10) {
+    if (booking.phone.replace(/\D/g, "").length < 10) {
       return res.status(400).json({ success: false, error: "Please enter a valid phone number with at least 10 digits." });
     }
 
