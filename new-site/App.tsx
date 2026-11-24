@@ -120,7 +120,7 @@ export default function App() {
     e.preventDefault();
     setFormError("");
     if (!name.trim() || !phone.trim()) { setFormError("Please add your name and phone number so Indu can reach you."); return; }
-    if (phone.replace(/\\D/g, "").length < 10) { setFormError("Please enter a complete phone number with at least 10 digits."); return; }
+    if (phone.replace(/\D/g, "").length < 10) { setFormError("Please enter a complete phone number with at least 10 digits."); return; }
     setIsSubmitting(true);
     try {
       const response = await fetch("/api/booking", {
