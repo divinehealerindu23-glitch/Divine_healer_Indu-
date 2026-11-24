@@ -119,5 +119,5 @@ export function AdminPortal() {
         </section>
       </div>}
       <p className="mt-12 text-center text-xs text-[#8F7B9E]">Divine Healer Indu • Secure product administration</p>
-    </div>;
+    </div></div>;
 }
