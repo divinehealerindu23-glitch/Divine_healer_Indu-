@@ -13,7 +13,7 @@ export default async function handler(req, res) {
     const { filename, mimeType, base64 } = req.body || {};
     if (!allowed.has(mimeType) || typeof base64 !== "string") return res.status(400).json({ error: "Please upload a JPG, PNG, WebP or GIF image." });
     const buffer = Buffer.from(base64, "base64");
-    if (!buffer.length || buffer.length > 5 * 1024 * 1024) return res.status(400).json({ error: "Image must be smaller than 5 MB." });
+    if (!buffer.length || buffer.length > 3 * 1024 * 1024) return res.status(400).json({ error: "Image must be smaller than 3 MB." });
     const ext = mimeType === "image/jpeg" ? "jpg" : mimeType.split("/")[1];
     const safeName = String(filename || "product").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 50);
     const blob = await put("products/images/" + safeName + "-" + randomUUID() + "." + ext, buffer, {
