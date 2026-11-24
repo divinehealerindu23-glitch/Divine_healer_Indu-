@@ -74,7 +74,7 @@ export default function App() {
   const [message, setMessage] = useState("");
   const [formError, setFormError] = useState("");
   const [saved, setSaved] = useState<{ name: string; service: string } | null>(null);
-  const [filter, setFilter] = useState("All");
+  const [serviceTab, setServiceTab] = useState<"Healing" | "Guidance">("Healing");
   const [messageIndex, setMessageIndex] = useState(0);
   const [messageRevealed, setMessageRevealed] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
@@ -86,10 +86,10 @@ export default function App() {
     }, { threshold: 0.12 });
     els.forEach((el) => io.observe(el));
     return () => io.disconnect();
-  }, [filter]);
+  }, [serviceTab]);
 
-  const categories = useMemo(() => ["All", "Relationships", "Abundance", "Wellbeing", "Career", "Numerology", "Guidance", "Cleansing"], []);
-  const visibleServices = filter === "All" ? services : services.filter(s => s.tag === filter || (filter === "Guidance" && ["Guidance", "Clarity", "Direction"].includes(s.tag)));
+  const healingServiceNames = ["Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing"];
+  const visibleServices = services.filter(s => serviceTab === "Healing" ? healingServiceNames.includes(s.name) : !healingServiceNames.includes(s.name));
 
   const whatsappText = useMemo(() => {
     const lines = [`Hello Divine Healer Indu,`, ``, `I would like to book a healing session.`, `Name: ${name || "[Your name]"}`, `Phone: ${phone || "[Your phone]"}`, `Service: ${selectedService}`, message ? `Message: ${message}` : ""].filter(Boolean);
@@ -215,8 +215,8 @@ export default function App() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,8,51,.92),rgba(42,10,74,.88)_55%,rgba(26,8,51,.94))]" aria-hidden="true" />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <div className="reveal flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ Sacred Services</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.4rem)] font-bold">Choose Your Healing <span className="gold-text italic">Path</span></h2><p className="mt-3 max-w-2xl text-[var(--muted)]">Every card opens a door. Select a service to begin your booking — or call for guidance on which path is right for you.</p></div><div className="flex items-center gap-2 text-sm"><MapPin size={18} className="text-[var(--gold)]" /><span>Delhi • In-person • {TIMINGS}</span></div></div>
-            <div className="mt-7 flex flex-wrap gap-2" aria-label="Filter services">{categories.map(c => <button key={c} onClick={() => setFilter(c)} aria-pressed={filter === c} className={`rounded-full border px-4 py-2 text-sm font-bold transition ${filter === c ? "border-[var(--gold)] bg-[var(--gold)] text-[#2A0A4A] shadow-[0_0_22px_rgba(255,184,77,.45)]" : "border-[rgba(212,175,55,.45)] bg-[rgba(26,8,51,.55)] text-[var(--lavender-soft)] hover:border-[var(--gold)]"}`}>{c}</button>)}</div>
-            <p className="mt-4 text-sm text-[var(--muted)]" aria-live="polite">Showing {visibleServices.length} of {services.length} services{filter !== "All" ? ` in ${filter}` : ""}.</p>
+            <div className="mt-7 flex flex-wrap gap-3" aria-label="Choose service type">{(["Healing", "Guidance"] as const).map(tab => <button key={tab} onClick={() => setServiceTab(tab)} aria-pressed={serviceTab === tab} className={`rounded-full border px-6 py-3 text-sm font-extrabold tracking-wide transition ${serviceTab === tab ? "border-[var(--gold)] bg-[var(--gold)] text-[#2A0A4A] shadow-[0_0_22px_rgba(255,184,77,.45)]" : "border-[rgba(212,175,55,.45)] bg-[rgba(26,8,51,.55)] text-[var(--lavender-soft)] hover:border-[var(--gold)]"}`}>{tab}</button>)}</div>
+            <p className="mt-4 text-sm text-[var(--muted)]" aria-live="polite">Showing {visibleServices.length} {serviceTab.toLowerCase()} services.</p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visibleServices.map((s) => <article key={s.name} className="tarot-card card-sheen group flex flex-col rounded-[24px] border border-[rgba(212,175,55,.4)] bg-[linear-gradient(165deg,rgba(67,26,112,.92),rgba(49,16,85,.94))] p-5 shadow-lg transition hover:-translate-y-1 hover:border-[var(--gold)] hover:shadow-[0_18px_45px_rgba(255,184,77,.22)]">
                 {s.image && <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[24px] border-b border-[rgba(212,175,55,.4)]"><img src={s.image} alt={s.imageAlt || s.name} className="h-44 w-full object-cover" loading="lazy" /></div>}
