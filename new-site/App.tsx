@@ -107,7 +107,8 @@ export default function App() {
   function pickService(n: string) {
     setSelectedService(n);
     setSaved(null);
-    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth" });
+    document.getElementById("booking")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("name")?.focus({ preventScroll: true }), 450);
   }
 
   function nextMessage() {
