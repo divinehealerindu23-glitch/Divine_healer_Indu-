@@ -190,10 +190,12 @@ export default function App() {
               <div className="absolute -bottom-4 left-1/2 w-[88%] -translate-x-1/2 rounded-2xl border border-[var(--line)] bg-[#1B0530] px-4 py-3 text-center text-sm shadow-xl">In-person sessions <span className="font-bold text-[var(--gold-soft)]">• Delhi</span> • {TIMINGS}</div>
             </div>
             <div className="reveal">
-              <p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ About Indu</p>
-              <h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.4rem)] font-bold leading-tight">A gentle guide for <span className="gold-text italic">deep healing</span></h2>
-              <p className="mt-5 leading-relaxed text-[var(--muted)]">Indu is Divine Healer Indu — a Reiki Grand Master and Humkara &amp; Haleem Healer devoted to helping people feel safe, clear, and connected again. Her work blends energy healing, Akashic wisdom, tarot, and numerology with warmth and practical guidance.</p>
-              <p className="mt-4 leading-relaxed text-[var(--muted)]">Whether you are carrying a question about love, money, health, career, or family, each session begins with listening. There is no judgement here — only space to breathe, understand, and begin again.</p>
+              <p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ Divine Healer Indu</p>
+              <h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.4rem)] font-bold leading-tight"><span className="gold-text italic">Divine Healer Indu</span></h2>
+              <p className="mt-5 leading-relaxed text-[var(--muted)]">Namaste, I’m Indu, the soul behind Divine Healer Indu. I am a Reiki Grand Master and Humkara &amp; Haleem healer, dedicated to offering spiritual guidance and energy healing.</p>
+              <p className="mt-4 leading-relaxed text-[var(--muted)]">Through Reiki, Humkara, Haleem, tarot and Akashic readings, and numerology, I offer compassionate, personalized sessions to help you find clarity, reconnect with your inner balance and navigate life’s challenges.</p>
+              <p className="mt-4 leading-relaxed text-[var(--muted)]">My intention is to provide a peaceful, supportive space where every person feels heard, respected and guided.</p>
+              <p className="mt-5 text-sm font-bold uppercase tracking-[.2em] text-[var(--gold-soft)]">Heal • Align • Manifest</p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[["Energy Healing", "Reiki, chakra & aura work"], ["Soul Readings", "Tarot, Akashic & dowsing"], ["Life Guidance", "Numerology & compatibility"]].map(([t, d]) => <div key={t} className="tarot-card rounded-2xl border border-[rgba(212,175,55,.4)] bg-white/5 p-4"><p className="font-bold text-[var(--gold-soft)]">{t}</p><p className="mt-1 text-sm text-[var(--muted)]">{d}</p></div>)}
               </div>
