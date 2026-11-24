@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { AdminPortal, ShopSection } from "./ShopAdmin";
 import { MoonStar, Sparkles, Phone, MessageCircle, MapPin, Clock, Heart, Coins, Activity, Flower2, Sun, ShieldCheck, Scale, Briefcase, Compass, Hash, Users, Smartphone, ChevronDown, Check, Star, HandHeart, Eye, BookOpen, ChevronLeft, ChevronRight, Quote, RefreshCw } from "lucide-react";
 const tarotImage = "/images/Taro%20Cards.jpg";
 const crystalHealingImage = "/images/Cristel%20Healing.jpg";
@@ -153,6 +154,8 @@ export default function App() {
   const currentMessage = divineMessages[messageIndex];
   const currentStory = testimonials[storyIndex];
 
+  if (window.location.pathname === "/admin" || window.location.pathname === "/admin/") return <AdminPortal />;
+
   return (
     <div data-safe-area-inset-root style={{ boxSizing: "border-box", paddingTop: "var(--safe-area-inset-top)" }} className="min-h-screen overflow-x-clip bg-[var(--royal-3)] text-[var(--ink)]">
       {/* NAV — over the tarot image */}
@@ -163,7 +166,7 @@ export default function App() {
             <span className="min-w-0 leading-tight"><span className="font-serif-display block truncate text-lg font-bold sm:text-xl">Divine Healer Indu</span><span className="block text-[10px] uppercase tracking-[.22em] text-[var(--lavender)]">Reiki • Humkara • Haleem</span></span>
           </a>
           <nav className="hidden items-center gap-6 text-sm font-semibold lg:flex" aria-label="Main navigation">
-            <a className="hover:text-[var(--gold-soft)]" href="#about">About</a><a className="hover:text-[var(--gold-soft)]" href="#services">Services</a><a className="hover:text-[var(--gold-soft)]" href="#daily">Daily Message</a><a className="hover:text-[var(--gold-soft)]" href="#stories">Stories</a><a className="hover:text-[var(--gold-soft)]" href="#faq">FAQ</a>
+            <a className="hover:text-[var(--gold-soft)]" href="#about">About</a><a className="hover:text-[var(--gold-soft)]" href="#services">Services</a><a className="hover:text-[var(--gold-soft)]" href="#shop">Shop</a><a className="hover:text-[var(--gold-soft)]" href="#daily">Daily Message</a><a className="hover:text-[var(--gold-soft)]" href="#stories">Stories</a><a className="hover:text-[var(--gold-soft)]" href="#faq">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
             <a href={PHONE_TEL} className="hidden rounded-full border border-[var(--gold)] px-4 py-2 text-sm font-bold text-[var(--gold-soft)] sm:inline-flex">Call Now</a>
@@ -171,7 +174,7 @@ export default function App() {
             <button onClick={() => setMenuOpen(v => !v)} aria-expanded={menuOpen} className="rounded-full border border-white/20 px-3 py-2 text-sm lg:hidden">{menuOpen ? "Close" : "Menu"}</button>
           </div>
         </div>
-        {menuOpen && <nav className="border-t border-white/10 px-5 py-4 lg:hidden" aria-label="Mobile navigation"><div className="grid gap-3 font-semibold"><a onClick={() => setMenuOpen(false)} href="#about">About</a><a onClick={() => setMenuOpen(false)} href="#services">Services</a><a onClick={() => setMenuOpen(false)} href="#daily">Daily Message</a><a onClick={() => setMenuOpen(false)} href="#stories">Stories</a><a onClick={() => setMenuOpen(false)} href="#faq">FAQ</a><a onClick={() => setMenuOpen(false)} href="#booking">Book a Session</a></div></nav>}
+        {menuOpen && <nav className="border-t border-white/10 px-5 py-4 lg:hidden" aria-label="Mobile navigation"><div className="grid gap-3 font-semibold"><a onClick={() => setMenuOpen(false)} href="#about">About</a><a onClick={() => setMenuOpen(false)} href="#services">Services</a><a onClick={() => setMenuOpen(false)} href="#shop">Shop</a><a onClick={() => setMenuOpen(false)} href="#daily">Daily Message</a><a onClick={() => setMenuOpen(false)} href="#stories">Stories</a><a onClick={() => setMenuOpen(false)} href="#faq">FAQ</a><a onClick={() => setMenuOpen(false)} href="#booking">Book a Session</a></div></nav>}
       </header>
 
       <main id="top">
@@ -232,7 +235,7 @@ export default function App() {
             <div className="reveal">
               <p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ Divine Healer Indu</p>
               <h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.4rem)] font-bold leading-tight"><span className="gold-text italic">Divine Healer Indu</span></h2>
-              <p className="mt-5 leading-relaxed text-[var(--muted)]">Namaste, I’m Indu, the soul behind Divine Healer Indu. I am a Reiki Grand Master and Humkara &amp; Haleem healer, dedicated to offering spiritual guidance and energy healing.</p>
+              <p className="mt-5 text-lg font-semibold tracking-wide text-[#D4AF37] drop-shadow-[0_0_12px_rgba(212,175,55,.28)]">Reiki Grand Master &amp; Healer</p><p className="mt-2 leading-relaxed text-[var(--muted)]">Namaste, I’m Indu, the soul behind Divine Healer Indu. I am a Reiki Grand Master and Humkara &amp; Haleem healer, dedicated to offering spiritual guidance and energy healing.</p>
               <p className="mt-4 leading-relaxed text-[var(--muted)]">Through Reiki, Humkara, Haleem, tarot and Akashic readings, and numerology, I offer compassionate, personalized sessions to help you find clarity, reconnect with your inner balance and navigate life’s challenges.</p>
               <p className="mt-4 leading-relaxed text-[var(--muted)]">My intention is to provide a peaceful, supportive space where every person feels heard, respected and guided.</p>
               <p className="mt-5 text-sm font-bold uppercase tracking-[.2em] text-[var(--gold-soft)]">Heal • Align • Manifest</p>
@@ -262,6 +265,8 @@ export default function App() {
             </div>
           </div>
         </section>
+
+        <ShopSection />
 
         {/* DAILY DIVINE MESSAGE */}
         <section id="daily" className="mx-auto max-w-7xl scroll-mt-24 px-4 py-14 sm:px-6 sm:py-16">
@@ -331,7 +336,7 @@ export default function App() {
       </main>
 
       <footer className="border-t border-[rgba(212,175,55,.25)] bg-[#12031F] px-4 py-12 sm:px-6">
-        <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.3fr_.8fr_.8fr]"><div><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--royal-2)] text-[var(--gold-soft)]"><MoonStar /></span><span className="font-serif-display text-2xl font-bold">Divine Healer Indu</span></div><p className="mt-4 max-w-md leading-relaxed text-[var(--muted)]">Reiki Grand Master • Humkara &amp; Haleem Healer<br />Heal • Align • Manifest</p><p className="mt-4 text-sm text-[var(--muted)]">Bookings through WhatsApp • Service details confirmed personally</p><p className="mt-2 text-xs font-bold uppercase tracking-[.2em] text-[var(--gold-soft)]">Tarot • Akashic • Reiki • Chakra • Aura</p></div><div><h3 className="font-bold text-[var(--gold-soft)]">Healing Services</h3><ul className="mt-4 space-y-2 text-sm text-[var(--muted)]"><li>Tarot &amp; Akashic Reading</li><li>Chakra, Aura &amp; Health Healing</li><li>Love, Marriage &amp; Compatibility</li><li>Money, Career &amp; Life Guidance</li><li>Numerology &amp; Black Magic Removal</li></ul></div><div><h3 className="font-bold text-[var(--gold-soft)]">Contact</h3><ul className="mt-4 space-y-3 text-sm text-[var(--muted)]"><li><a href={PHONE_TEL} className="font-bold text-white">Call: {PHONE_DISPLAY}</a></li><li><a href={WHATSAPP} target="_blank" rel="noopener" className="text-white underline">WhatsApp Indu</a></li><li>Booking: WhatsApp only</li><li>Service details confirmed personally by Indu</li></ul><a href="#booking" className="mt-5 inline-block rounded-full bg-[var(--gold)] px-5 py-2.5 text-sm font-extrabold text-[#2A0A4A]">Book Your Session</a></div></div><div className="gold-line mx-auto mt-10 max-w-7xl" /><p className="mx-auto mt-6 max-w-7xl text-center text-xs text-[var(--muted)]">© {new Date().getFullYear()} Divine_healer_Indu. A space for healing, clarity, and compassionate guidance.</p>
+        <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.3fr_.8fr_.8fr]"><div><div className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-full bg-[var(--royal-2)] text-[var(--gold-soft)]"><MoonStar /></span><span className="font-serif-display text-2xl font-bold">Divine Healer Indu</span></div><p className="mt-4 max-w-md leading-relaxed text-[var(--muted)]">Reiki Grand Master • Humkara &amp; Haleem Healer<br />Heal • Align • Manifest</p><p className="mt-4 text-sm text-[var(--muted)]">Bookings through WhatsApp • Service details confirmed personally</p><p className="mt-2 text-xs font-bold uppercase tracking-[.2em] text-[var(--gold-soft)]">Tarot • Akashic • Reiki • Chakra • Aura</p></div><div><h3 className="font-bold text-[var(--gold-soft)]">Healing Services</h3><ul className="mt-4 space-y-2 text-sm text-[var(--muted)]"><li>Tarot &amp; Akashic Reading</li><li>Chakra, Aura &amp; Health Healing</li><li>Love, Marriage &amp; Compatibility</li><li>Money, Career &amp; Life Guidance</li><li>Numerology &amp; Black Magic Removal</li></ul></div><div><h3 className="font-bold text-[var(--gold-soft)]">Contact</h3><ul className="mt-4 space-y-3 text-sm text-[var(--muted)]"><li><a href={PHONE_TEL} className="font-bold text-white">Call: {PHONE_DISPLAY}</a></li><li><a href={WHATSAPP} target="_blank" rel="noopener" className="text-white underline">WhatsApp Indu</a></li><li>Booking: WhatsApp only</li><li><a href="/admin" className="text-[var(--gold-soft)]">Admin</a></li><li>Service details confirmed personally by Indu</li></ul><a href="#booking" className="mt-5 inline-block rounded-full bg-[var(--gold)] px-5 py-2.5 text-sm font-extrabold text-[#2A0A4A]">Book Your Session</a></div></div><div className="gold-line mx-auto mt-10 max-w-7xl" /><p className="mx-auto mt-6 max-w-7xl text-center text-xs text-[var(--muted)]">© {new Date().getFullYear()} Divine_healer_Indu. A space for healing, clarity, and compassionate guidance.</p>
       </footer>
 
       {/* FLOATING */}
