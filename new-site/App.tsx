@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MoonStar, Sparkles, Phone, MessageCircle, MapPin, Clock, Heart, Coins, Activity, Flower2, Sun, ShieldCheck, Scale, Briefcase, Compass, Hash, Users, Smartphone, ChevronDown, Check, Star, HandHeart, Eye, BookOpen, ChevronLeft, ChevronRight, Quote, RefreshCw } from "lucide-react";
-const tarotImage = "/images/tarot-cards.svg";
+const tarotImage = "/images/Taro%20Cards.jpg";
+const crystalHealingImage = "/images/Cristel%20Healing.jpg";
+const mantraHealingImage = "/images/Maa%20tripursundari.jpg";
 const profileImage = "/images/Divine%20Healer%20Indu.jpeg";
 
 const PHONE_DISPLAY = "8920702407";
@@ -8,9 +10,11 @@ const PHONE_TEL = "tel:+918920702407";
 const WHATSAPP = "https://wa.me/918920702407";
 const TIMINGS = "11 AM – 8 PM";
 
-type Service = { name: string; icon: React.ReactNode; desc: string; tag: string };
+type Service = { name: string; icon: React.ReactNode; desc: string; tag: string; image?: string; imageAlt?: string };
 const services: Service[] = [
   { name: "Tarot Card Reading", icon: <Eye size={24} />, desc: "Clear, compassionate insight for the question on your heart.", tag: "Clarity" },
+  { name: "Crystal Healing", icon: <Sparkles size={24} />, desc: "A crystal-focused healing experience to support calm, balance, and intention.", tag: "Energy Healing", image: crystalHealingImage, imageAlt: "Crystal healing" },
+  { name: "Mantra Healing", icon: <Flower2 size={24} />, desc: "A devotional mantra healing practice inspired by Maa Tripurasundari.", tag: "Mantra", image: mantraHealingImage, imageAlt: "Maa Tripurasundari" },
   { name: "Akashic Reading", icon: <BookOpen size={24} />, desc: "Gentle guidance from your soul’s deeper story and lessons.", tag: "Soul Path" },
   { name: "Money Healing", icon: <Coins size={24} />, desc: "Release blocks around abundance and welcome steady flow.", tag: "Abundance" },
   { name: "Love & Marriage Healing", icon: <Heart size={24} />, desc: "Heal the bond, restore trust, and nurture lasting closeness.", tag: "Relationships" },
@@ -137,7 +141,7 @@ export default function App() {
       <main id="top">
         {/* HERO — full tarot image + royal-purple gradient + scrim */}
         <section className="relative overflow-hidden">
-          <img src={tarotImage} alt="Tarot cards with gold moons and stars, a glowing crystal ball, a candle and amethyst crystals on purple velvet" className="absolute inset-0 h-full w-full object-cover object-[center_38%]" />
+          <img src={tarotImage} alt="Tarot cards arranged for a spiritual reading" className="absolute inset-0 h-full w-full object-cover object-[center_38%]" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,8,51,.88)_0%,rgba(26,8,51,.58)_38%,rgba(26,8,51,.82)_72%,#1A0833_100%)]" aria-hidden="true" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(255,184,77,.16),transparent_55%)]" aria-hidden="true" />
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
@@ -161,7 +165,7 @@ export default function App() {
                 <p className="mt-7 border-t border-[rgba(212,175,55,.35)] pt-4 text-center text-xs font-bold uppercase tracking-[.24em] text-[var(--gold-soft)] sm:text-left">Tarot • Akashic • Reiki • Chakra • Aura</p>
               </div>
               <div className="mt-6 flex flex-wrap gap-3 px-1">
-                <span className="rounded-full border border-[rgba(212,175,55,.55)] bg-[rgba(26,8,51,.72)] px-3 py-1.5 text-xs font-bold"><span className="text-[var(--gold-soft)]">22 healing services</span> • One caring guide</span>
+                <span className="rounded-full border border-[rgba(212,175,55,.55)] bg-[rgba(26,8,51,.72)] px-3 py-1.5 text-xs font-bold"><span className="text-[var(--gold-soft)]">24 healing services</span> • One caring guide</span>
                 <span className="rounded-full border border-[rgba(212,175,55,.55)] bg-[rgba(26,8,51,.72)] px-3 py-1.5 text-xs font-bold"><span className="text-[var(--gold-soft)]">Delhi • In-person</span> • Sessions by appointment</span>
               </div>
             </div>
@@ -214,6 +218,7 @@ export default function App() {
             <p className="mt-4 text-sm text-[var(--muted)]" aria-live="polite">Showing {visibleServices.length} of {services.length} services{filter !== "All" ? ` in ${filter}` : ""}.</p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visibleServices.map((s) => <article key={s.name} className="tarot-card card-sheen group flex flex-col rounded-[24px] border border-[rgba(212,175,55,.4)] bg-[linear-gradient(165deg,rgba(67,26,112,.92),rgba(49,16,85,.94))] p-5 shadow-lg transition hover:-translate-y-1 hover:border-[var(--gold)] hover:shadow-[0_18px_45px_rgba(255,184,77,.22)]">
+                {s.image && <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[24px] border-b border-[rgba(212,175,55,.4)]"><img src={s.image} alt={s.imageAlt || s.name} className="h-44 w-full object-cover" loading="lazy" /></div>}
                 <div className="flex items-start justify-between"><span className="grid h-12 w-12 place-items-center rounded-2xl border border-[rgba(212,175,55,.45)] bg-[rgba(27,5,48,.55)] text-[var(--gold-soft)]">{s.icon}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--lavender-soft)]">{s.tag}</span></div>
                 <h3 className="font-serif-display mt-4 text-xl font-bold leading-snug">{s.name}</h3><p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted)]">{s.desc}</p>
                 <div className="mt-5 flex items-center gap-2"><button onClick={() => pickService(s.name)} className="flex-1 rounded-full bg-[var(--gold)] px-4 py-2.5 text-sm font-extrabold text-[#2A0A4A]">Book Now</button><a href={WHATSAPP} target="_blank" rel="noopener" aria-label={`Ask about ${s.name} on WhatsApp`} className="grid h-10 w-10 place-items-center rounded-full border border-white/20"><MessageCircle size={18} /></a></div>
