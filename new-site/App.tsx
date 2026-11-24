@@ -12,7 +12,7 @@ const TIMINGS = "11 AM – 8 PM";
 
 type Service = { name: string; icon: React.ReactNode; desc: string; tag: string; image?: string; imageAlt?: string };
 const services: Service[] = [
-  { name: "Tarot Card Reading", icon: <Eye size={24} />, desc: "Clear, compassionate insight for the question on your heart.", tag: "Clarity" },
+  { name: "Tarot Card Reading", icon: <Eye size={24} />, desc: "Clear, compassionate insight for the question on your heart.", tag: "Clarity", image: tarotImage, imageAlt: "Tarot cards for a spiritual reading" },
   { name: "Crystal Healing", icon: <Sparkles size={24} />, desc: "A crystal-focused healing experience to support calm, balance, and intention.", tag: "Energy Healing", image: crystalHealingImage, imageAlt: "Crystal healing" },
   { name: "Mantra Healing", icon: <Flower2 size={24} />, desc: "A devotional mantra healing practice inspired by Maa Tripurasundari.", tag: "Mantra", image: mantraHealingImage, imageAlt: "Maa Tripurasundari" },
   { name: "Akashic Reading", icon: <BookOpen size={24} />, desc: "Gentle guidance from your soul’s deeper story and lessons.", tag: "Soul Path" },
