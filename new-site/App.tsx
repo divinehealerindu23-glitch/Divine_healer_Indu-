@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { MoonStar, Sparkles, Phone, MessageCircle, MapPin, Clock, Heart, Coins, Activity, Flower2, Sun, ShieldCheck, Scale, Briefcase, Compass, Hash, Users, Smartphone, ChevronDown, Check, Star, HandHeart, Eye, BookOpen, ChevronLeft, ChevronRight, Quote, RefreshCw } from "lucide-react";
-import tarotImage from "container:///mnt/data/src/assets/f971c2e5062dc82e-Taro_Cards.jpg";
+const tarotImage = "/images/tarot-cards.svg";
+const profileImage = "/images/Divine%20Healer%20Indu.jpeg";
 
 const PHONE_DISPLAY = "8920702407";
 const PHONE_TEL = "tel:+918920702407";
@@ -59,13 +60,6 @@ const divineMessages = [
 
 const marqueeItems = ["Tarot Reading", "Akashic Reading", "Reiki Healing", "Chakra Alignment", "Aura Cleansing", "Love Healing", "Money Healing", "Numerology", "Black Magic Removal", "Career Guidance"];
 
-async function callApi(action: string, args: Record<string, unknown>) {
-  const res = await fetch("actions", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ action, args }) });
-  const json = await res.json().catch(() => ({}));
-  if (!res.ok || json.error) throw new Error(json.error || "The booking could not be recorded. Please try again.");
-  return json.data;
-}
-
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -73,22 +67,12 @@ export default function App() {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
-  const [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState("");
-  const [saved, setSaved] = useState<{ reference: string; name: string; service: string } | null>(null);
-  const [apiReady, setApiReady] = useState(true);
+  const [saved, setSaved] = useState<{ name: string; service: string } | null>(null);
   const [filter, setFilter] = useState("All");
   const [messageIndex, setMessageIndex] = useState(0);
   const [messageRevealed, setMessageRevealed] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
-
-  useEffect(() => {
-    let alive = true;
-    callApi("records.list", { collection: "booking_requests", limit: 1 })
-      .then(() => { if (alive) setApiReady(true); })
-      .catch(() => { if (alive) setApiReady(false); });
-    return () => { alive = false; };
-  }, []);
 
   useEffect(() => {
     const els = Array.from(document.querySelectorAll(".reveal"));
@@ -107,20 +91,12 @@ export default function App() {
     return `https://wa.me/918920702407?text=${encodeURIComponent(lines.join("\n"))}`;
   }, [name, phone, selectedService, message]);
 
-  async function submitBooking(e: React.FormEvent) {
+  function submitBooking(e: React.FormEvent) {
     e.preventDefault();
     setFormError("");
     if (!name.trim() || !phone.trim()) { setFormError("Please add your name and phone number so Indu can reach you."); return; }
-    if (phone.replace(/\D/g, "").length < 10) { setFormError("Please enter a complete phone number with at least 10 digits."); return; }
-    const key = `booking-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    setBusy(true);
-    try {
-      const created = await callApi("records.create", { collection: "booking_requests", idempotency_key: key, value: { name: name.trim(), phone: phone.trim(), service: selectedService, message: message.trim(), status: "requested", created_via: "website booking form" } });
-      setSaved({ reference: String(created?.id || key).slice(0, 8).toUpperCase(), name: name.trim(), service: selectedService });
-      setApiReady(true);
-    } catch (err) {
-      setFormError(err instanceof Error ? err.message : "Your request could not be recorded. Please call or WhatsApp instead.");
-    } finally { setBusy(false); }
+    if (phone.replace(/\\D/g, "").length < 10) { setFormError("Please enter a complete phone number with at least 10 digits."); return; }
+    setSaved({ name: name.trim(), service: selectedService });
   }
 
   function pickService(n: string) {
@@ -207,7 +183,7 @@ export default function App() {
             <div className="reveal relative mx-auto w-full max-w-sm">
               <div className="rounded-[28px] border-2 border-[var(--gold)] bg-[#1A0833] p-3 shadow-[0_0_45px_rgba(255,184,77,.28)]">
                 <div className="overflow-hidden rounded-[20px] border border-[rgba(212,175,55,.45)]">
-                  <div role="img" aria-label="Tarot cards, crystal ball, candle and amethyst crystals arranged for a healing reading" style={{ backgroundImage: `url(${tarotImage})`, backgroundSize: "cover", backgroundPosition: "center 62%" }} className="aspect-[4/5] w-full" />
+                  <img src={profileImage} alt="Portrait of Divine Healer Indu" className="aspect-[4/5] w-full object-cover object-top" />
                 </div>
                 <p className="px-2 pb-1 pt-3 text-center text-xs uppercase tracking-[.22em] text-[var(--gold-soft)]">✦ Tarot • Akashic • Reiki ✦</p>
               </div>
@@ -301,9 +277,9 @@ export default function App() {
           <div className="relative mx-auto max-w-7xl">
             <div className="reveal overflow-hidden rounded-[32px] border border-[rgba(212,175,55,.55)] bg-[linear-gradient(145deg,rgba(75,29,122,.96),rgba(42,10,74,.97))] shadow-[0_30px_80px_rgba(0,0,0,.35)]">
               <div className="grid lg:grid-cols-[.9fr_1.1fr]">
-                <div className="p-6 sm:p-9"><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold-soft)]">✦ Booking &amp; Contact</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.2rem)] font-bold leading-tight">Your healing begins with one <span className="gold-text italic">brave step</span></h2><p className="mt-4 leading-relaxed text-[var(--muted)]">Share a few details and your request will be recorded for Indu. Then use WhatsApp to send your booking message directly.</p><div className="mt-7 space-y-4"><a href={PHONE_TEL} className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--gold)] text-[#2A0A4A]"><Phone /></span><span><span className="block text-xs uppercase tracking-widest text-[var(--lavender)]">Call Now</span><span className="text-xl font-extrabold">{PHONE_DISPLAY}</span></span></a><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><MapPin className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">In-person in Delhi</span><span className="text-sm text-[var(--muted)]">Location details shared after booking.</span></span></div><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><Clock className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">Book in advance • {TIMINGS}</span><span className="text-sm text-[var(--muted)]">Sessions are by appointment.</span></span></div></div><a href={WHATSAPP} target="_blank" rel="noopener" className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 font-extrabold text-[#07331A]"><MessageCircle /> Message on WhatsApp</a></div>
+                <div className="p-6 sm:p-9"><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold-soft)]">✦ Booking &amp; Contact</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.2rem)] font-bold leading-tight">Your healing begins with one <span className="gold-text italic">brave step</span></h2><p className="mt-4 leading-relaxed text-[var(--muted)]">Share a few details, then send your booking request directly to Indu on WhatsApp.</p><div className="mt-7 space-y-4"><a href={PHONE_TEL} className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><span className="grid h-11 w-11 place-items-center rounded-full bg-[var(--gold)] text-[#2A0A4A]"><Phone /></span><span><span className="block text-xs uppercase tracking-widest text-[var(--lavender)]">Call Now</span><span className="text-xl font-extrabold">{PHONE_DISPLAY}</span></span></a><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><MapPin className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">In-person in Delhi</span><span className="text-sm text-[var(--muted)]">Location details shared after booking.</span></span></div><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><Clock className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">Book in advance • {TIMINGS}</span><span className="text-sm text-[var(--muted)]">Sessions are by appointment.</span></span></div></div><a href={WHATSAPP} target="_blank" rel="noopener" className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 font-extrabold text-[#07331A]"><MessageCircle /> Message on WhatsApp</a></div>
                 <div className="bg-[var(--ink)] p-6 text-[#1B0530] sm:p-9">
-                  {saved ? <div className="flex h-full flex-col justify-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-[#E9F7E9] text-green-700"><Check size={32} /></span><h3 className="font-serif-display mt-5 text-3xl font-bold">Thank you, {saved.name}.</h3><p className="mt-3 leading-relaxed text-gray-700">Your request for <strong>{saved.service}</strong> has been recorded. Reference <strong>{saved.reference}</strong>. Next, send the prefilled WhatsApp message so Indu can confirm your session.</p><a href={whatsappText} target="_blank" rel="noopener" className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-extrabold text-[#07331A]"><MessageCircle /> Open WhatsApp Message</a><button onClick={() => { setSaved(null); setName(""); setPhone(""); setMessage(""); }} className="mt-4 w-fit rounded-full border border-[#2A0A4A] px-5 py-2 font-bold">Make another request</button></div> : <form onSubmit={submitBooking}><h3 className="font-serif-display text-2xl font-bold">Request a session</h3><p className="mt-1 text-sm text-gray-600">Your details are recorded only for this booking request. Timings: {TIMINGS}.</p><label className="mt-6 block text-sm font-bold" htmlFor="name">Full name</label><input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="phone">Phone number</label><input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone number" inputMode="tel" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="service">Service</label><select id="service" value={selectedService} onChange={e => setSelectedService(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{services.map(s => <option key={s.name}>{s.name}</option>)}</select><label className="mt-4 block text-sm font-bold" htmlFor="message">Message <span className="font-normal text-gray-500">(optional)</span></label><textarea id="message" value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Share your concern in a few words…" className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 [overflow-wrap:anywhere]" />{formError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{formError}</p>}{!apiReady && <p className="mt-4 text-sm text-amber-800">The booking record service is unavailable right now. You can still call or WhatsApp directly.</p>}<button disabled={busy} className="mt-6 w-full rounded-full bg-[#2A0A4A] px-5 py-3.5 font-extrabold text-white disabled:opacity-60">{busy ? "Recording your request…" : "Save Request & Continue to WhatsApp"}</button><p className="mt-3 text-center text-xs text-gray-500">After saving, you can open WhatsApp with your message prefilled.</p></form>}
+                  {saved ? <div className="flex h-full flex-col justify-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-[#E9F7E9] text-green-700"><Check size={32} /></span><h3 className="font-serif-display mt-5 text-3xl font-bold">Thank you, {saved.name}.</h3><p className="mt-3 leading-relaxed text-gray-700">Your request for <strong>{saved.service}</strong> is ready. Send the prefilled WhatsApp message below so Indu can receive your details and confirm your session. Your appointment is not confirmed until Indu replies.</p><a href={whatsappText} target="_blank" rel="noopener" className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-extrabold text-[#07331A]"><MessageCircle /> Open WhatsApp Message</a><button onClick={() => { setSaved(null); setName(""); setPhone(""); setMessage(""); }} className="mt-4 w-fit rounded-full border border-[#2A0A4A] px-5 py-2 font-bold">Make another request</button></div> : <form onSubmit={submitBooking}><h3 className="font-serif-display text-2xl font-bold">Request a session</h3><p className="mt-1 text-sm text-gray-600">Your details will be included in a WhatsApp message to Indu. Timings: {TIMINGS}.</p><label className="mt-6 block text-sm font-bold" htmlFor="name">Full name</label><input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="phone">Phone number</label><input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone number" inputMode="tel" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="service">Service</label><select id="service" value={selectedService} onChange={e => setSelectedService(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{services.map(s => <option key={s.name}>{s.name}</option>)}</select><label className="mt-4 block text-sm font-bold" htmlFor="message">Message <span className="font-normal text-gray-500">(optional)</span></label><textarea id="message" value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Share your concern in a few words…" className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 [overflow-wrap:anywhere]" />{formError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{formError}</p>}<button className="mt-6 w-full rounded-full bg-[#2A0A4A] px-5 py-3.5 font-extrabold text-white">Prepare WhatsApp Booking</button><p className="mt-3 text-center text-xs text-gray-500">Your WhatsApp message will open with these details filled in for you.</p></form>}
                 </div>
               </div>
             </div>
