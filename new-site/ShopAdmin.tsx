@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { auth } from "./firebase";
-import { ArrowLeft, ImagePlus, LogOut, Package, Plus, Save, ShoppingBag, Trash2, Upload, Boxes, Eye, EyeOff } from "lucide-react";
-
+import { ArrowLeft, ImagePlus, LogOut, Package, Plus, Save, ShoppingBag, Trash2, Upload, Boxes, Eye, EyeOff, Sparkles, MessageCircle } from "lucide-react";
 type Product = {
   id: string;
   name: string;
