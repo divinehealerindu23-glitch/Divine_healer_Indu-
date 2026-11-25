@@ -19,7 +19,7 @@ export default function ProfilePanel() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"profile" | "orders">("profile");
-  const isOwner = user?.email?.toLowerCase() === "divinehealerindu23@gmail.com" && user.emailVerified;
+  const isOwner = user?.email?.toLowerCase() === "divinehealerindu23@gmail.com";
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
   useEffect(() => {
@@ -65,14 +65,16 @@ export default function ProfilePanel() {
     {open && <div className="absolute left-0 top-full z-[60] mt-3 w-[min(92vw,390px)] overflow-hidden rounded-2xl border border-[rgba(212,175,55,.55)] bg-[#FBF8FF] text-[#28113F] shadow-[0_20px_60px_rgba(0,0,0,.4)]">
       <div className="flex items-center justify-between border-b border-purple-100 bg-[#32105B] px-4 py-3 text-white"><div><p className="text-xs uppercase tracking-widest text-[#F5D77B]">Your private space</p><p className="font-bold">{user ? (user.displayName || user.email) : "Welcome"}</p></div><button type="button" aria-label="Close profile menu" onClick={() => setOpen(false)} className="rounded-full p-1 hover:bg-white/10"><X size={18}/></button></div>
       {user ? <div className="p-4">
-        <div className="mb-4 grid grid-cols-2 gap-2">
+        <div className={`mb-4 grid ${isOwner ? "grid-cols-3" : "grid-cols-2"} gap-2`}>
           <button type="button" onClick={() => setTab("profile")} className={`rounded-xl px-3 py-2 text-sm font-bold ${tab === "profile" ? "bg-[#32105B] text-white" : "bg-purple-50 text-[#32105B]"}`}><UserRound className="mr-1 inline" size={15}/> My Profile</button>
           <button type="button" onClick={() => setTab("orders")} className={`rounded-xl px-3 py-2 text-sm font-bold ${tab === "orders" ? "bg-[#32105B] text-white" : "bg-purple-50 text-[#32105B]"}`}><ClipboardList className="mr-1 inline" size={15}/> Order Details</button>
+          {isOwner && <a href="/admin" className="rounded-xl bg-amber-100 px-2 py-2 text-center text-sm font-bold text-[#32105B]"><Package className="mr-1 inline" size={15}/> Stock Manager</a>}
         </div>
         {tab === "profile" ? <div>
           <p className="text-sm text-gray-600">Signed in as</p><p className="font-bold">{user.email}</p>
           {!user.emailVerified && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">Please verify your email. <button className="font-bold underline" onClick={() => sendEmailVerification(user).then(() => setNotice("Verification email sent again."))}>Resend verification email</button></p>}
-          {isOwner && <a href="/admin" className="mt-4 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-3 text-sm font-bold text-[#32105B]"><Package size={17}/> Stock Manager <span className="ml-auto text-xs font-normal text-gray-500">Owner only</span></a>}
+          {isOwner && !user.emailVerified && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">Your owner email must be verified before you can manage products. Use the verification link sent to your inbox, then sign out and sign in again.</p>}
+          {isOwner && user.emailVerified && <p className="mt-3 text-xs text-green-700">Owner access confirmed. Stock Manager is available in the tab above.</p>}
           {notice && <p className="mt-3 text-sm text-green-700">{notice}</p>}
         </div> : <div>
           <div className="flex items-center justify-between"><h3 className="font-bold">My Orders &amp; Bookings</h3><span className="text-xs text-gray-500">{orders.length} records</span></div>
