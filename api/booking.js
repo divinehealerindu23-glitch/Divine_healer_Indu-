@@ -7,13 +7,13 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { name, phone, service, message = "" } = req.body || {};
+    const { name, phone, service, knot = "", consultationFee = 0, knotPrice = 0, message = "" } = req.body || {};
     const clean = (value, max = 1000) => String(value || "").trim().replace(/[\u0000-\u001F\u007F]/g, "").slice(0, max);
     const booking = {
       name: clean(name, 120),
       phone: clean(phone, 40),
       service: clean(service, 160),
-      message: clean(message, 1000)
+      message: clean([knot ? `Knot: ${clean(knot, 100)}` : "", `Consultation fee: ₹${Number(consultationFee) === 300 ? 300 : 0}`, Number(knotPrice) === 550 ? "Knot price: ₹550" : "", message].filter(Boolean).join(" | "), 1000)
     };
 
     if (!booking.name || !booking.phone || !booking.service) {
