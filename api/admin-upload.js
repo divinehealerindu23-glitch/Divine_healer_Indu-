@@ -4,7 +4,7 @@ import { requireAdmin } from "./_admin-auth.js";
 
 const allowed = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 export default async function handler(req, res) {
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return res.status(405).json({ error: "Method not allowed." });
