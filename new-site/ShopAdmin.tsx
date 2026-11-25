@@ -1,4 +1,6 @@
 import React, { useEffect, useState } from "react";
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
+import { auth } from "./firebase";
 import { ArrowLeft, ImagePlus, LogOut, Package, Plus, Save, ShoppingBag, Trash2, Upload, Boxes, Eye, EyeOff } from "lucide-react";
 
 type Product = {
@@ -15,6 +17,7 @@ type Product = {
 const blankProduct = (): Product => ({ id: "", name: "", description: "", price: "", stock: 0, imageUrl: "", availability: "Available" });
 const gold = "#D4AF37";
 const whatsapp = "https://wa.me/918920702407";
+const OWNER_EMAIL = "divinehealerindu23@gmail.com";
 
 export function ShopSection() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -35,8 +38,10 @@ export function ShopSection() {
 }
 
 export function AdminPortal() {
+  const [email, setEmail] = useState(OWNER_EMAIL);
   const [password, setPassword] = useState("");
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const loggedIn = Boolean(user && user.email?.toLowerCase() === OWNER_EMAIL && user.emailVerified);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
@@ -45,8 +50,14 @@ export function AdminPortal() {
   const [uploading, setUploading] = useState(false);
   const [notice, setNotice] = useState("");
 
+  async function adminHeaders(json = true) {
+    const current = auth.currentUser;
+    if (!current || current.email?.toLowerCase() !== OWNER_EMAIL || !current.emailVerified) throw new Error("Please sign in with the verified owner account.");
+    const token = await current.getIdToken();
+    return { ...(json ? { "Content-Type": "application/json" } : {}), Authorization: "Bearer " + token };
+  }
   async function loadProducts() {
-    const r = await fetch("/api/admin-products");
+    const r = await fetch("/api/admin-products", { headers: await adminHeaders(false) });
     const data = await r.json();
     if (!r.ok) throw new Error(data.error || "Could not load products.");
     setProducts(data.products || []);
@@ -54,15 +65,24 @@ export function AdminPortal() {
   async function login(e: React.FormEvent) {
     e.preventDefault(); setChecking(true); setError("");
     try {
-      const r = await fetch("/api/admin-login", {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({password})});
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.error || "Incorrect password.");
-      setLoggedIn(true); setPassword(""); await loadProducts();
-    } catch (e) { setError(e instanceof Error ? e.message : "Unable to sign in."); }
+      if (email.trim().toLowerCase() !== OWNER_EMAIL) throw new Error("Only the owner email account can access Stock Manager.");
+      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      if (credential.user.email?.toLowerCase() !== OWNER_EMAIL) { await signOut(auth); throw new Error("This account is not authorised."); }
+      if (!credential.user.emailVerified) throw new Error("Please verify the owner email address first, then sign in again.");
+      setUser(credential.user); setPassword(""); await loadProducts();
+    } catch (e) { setError(e instanceof Error ? e.message.replace("Firebase: ", "") : "Unable to sign in."); }
     finally { setChecking(false); }
   }
+  useEffect(() => onAuthStateChanged(auth, async current => {
+    if (current?.email?.toLowerCase() === OWNER_EMAIL && current.emailVerified) {
+      setUser(current);
+      try { await loadProducts(); } catch (e) { setError(e instanceof Error ? e.message : "Could not load products."); }
+    } else {
+      setUser(null); setProducts([]);
+    }
+  }), []);
   async function saveProducts(next: Product[]) {
-    const r = await fetch("/api/admin-products",{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({products:next})});
+    const r = await fetch("/api/admin-products",{method:"PUT",headers:await adminHeaders(),body:JSON.stringify({products:next})});
     const data=await r.json(); if(!r.ok) throw new Error(data.error || "Could not save catalogue.");
     setProducts(data.products || next);
   }
@@ -83,7 +103,7 @@ export function AdminPortal() {
     setUploading(true);setError("");
     try {
       const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=reject;reader.readAsDataURL(file);});
-      const r=await fetch("/api/admin-upload",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({filename:file.name,mimeType:file.type,base64})});
+      const r=await fetch("/api/admin-upload",{method:"POST",headers:await adminHeaders(),body:JSON.stringify({filename:file.name,mimeType:file.type,base64})});
       const data=await r.json();if(!r.ok)throw new Error(data.error||"Image upload failed.");
       setEditing(p=>({...p,imageUrl:data.url}));setNotice("Product image uploaded.");
     } catch(e){setError(e instanceof Error?e.message:"Image upload failed.");}
@@ -95,13 +115,13 @@ export function AdminPortal() {
     catch(e){setError(e instanceof Error?e.message:"Could not delete product.");}
   }
   async function logout() {
-    await fetch("/api/admin-login",{method:"DELETE"});setLoggedIn(false);setProducts([]);setEditing(blankProduct());
+    await signOut(auth);setUser(null);setProducts([]);setEditing(blankProduct());
   }
   const input="mt-2 w-full rounded-xl border border-[#d7c8e7] bg-white px-4 py-3 text-[#241331] outline-none focus:border-[#B68A24]";
   return <div className="min-h-screen bg-[#160624] px-4 py-8 text-[#F7F0FF] sm:px-6">
     <div className="mx-auto max-w-6xl">
       <header className="mb-8 flex items-center justify-between gap-4 border-b border-[rgba(212,175,55,.35)] pb-5"><div><a href="/" className="text-xs uppercase tracking-[.2em] text-[#D4AF37]">← Divine Healer Indu</a><h1 className="font-serif-display mt-2 text-3xl font-bold sm:text-4xl">Product Admin</h1><p className="mt-1 text-sm text-[#CBBAD9]">Manage your collection, prices, stock and availability.</p></div>{loggedIn&&<button onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]"><LogOut size={16}/> Sign out</button>}</header>
-      {!loggedIn ? <form onSubmit={login} className="mx-auto mt-16 max-w-md rounded-[28px] border border-[rgba(212,175,55,.45)] bg-white/5 p-7 shadow-2xl"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#D4AF37] text-[#D4AF37]"><Boxes size={26}/></div><h2 className="font-serif-display mt-5 text-center text-2xl font-bold">Admin access</h2><p className="mt-2 text-center text-sm text-[#CBBAD9]">Sign in to manage your Divine Collection.</p><label className="mt-6 block text-sm font-bold" htmlFor="admin-password">Admin password</label><input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className={input} required/><button disabled={checking} className="mt-5 w-full rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60">{checking?"Signing in…":"Sign in securely"}</button>{error&&<p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}</form> :
+      {!loggedIn ? <form onSubmit={login} className="mx-auto mt-16 max-w-md rounded-[28px] border border-[rgba(212,175,55,.45)] bg-white/5 p-7 shadow-2xl"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#D4AF37] text-[#D4AF37]"><Boxes size={26}/></div><h2 className="font-serif-display mt-5 text-center text-2xl font-bold">Admin access</h2><p className="mt-2 text-center text-sm text-[#CBBAD9]">Only the verified owner account can manage products and stock.</p><label className="mt-6 block text-sm font-bold" htmlFor="admin-email">Owner email</label><input id="admin-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} className={input} required/><label className="mt-4 block text-sm font-bold" htmlFor="admin-password">Account password</label><input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className={input} required/><button disabled={checking} className="mt-5 w-full rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60">{checking?"Signing in…":"Sign in with owner account"}</button>{error&&<p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}</form> :
       <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
         <form onSubmit={saveProduct} className="h-fit rounded-[26px] border border-[rgba(212,175,55,.4)] bg-white/5 p-6">
           <div className="flex items-center justify-between gap-3"><h2 className="font-serif-display text-2xl font-bold">{editing.id?"Edit product":"Add a product"}</h2><button type="button" onClick={()=>{setEditing(blankProduct());setError("");}} className="text-sm text-[#F1D98B]">Clear form</button></div>
@@ -109,7 +129,7 @@ export function AdminPortal() {
           <label className="mt-4 block text-sm font-bold">Description<textarea className={input} rows={3} value={editing.description} onChange={e=>setEditing(p=>({...p,description:e.target.value}))} placeholder="Describe your product…"/></label>
           <div className="mt-4 grid grid-cols-2 gap-4"><label className="block text-sm font-bold">Price<input className={input} value={editing.price} onChange={e=>setEditing(p=>({...p,price:e.target.value}))} placeholder="e.g. 999"/></label><label className="block text-sm font-bold">Stock quantity<input className={input} type="number" min="0" step="1" value={editing.stock} onChange={e=>setEditing(p=>({...p,stock:Math.max(0,Number(e.target.value))}))}/></label></div>
           <label className="mt-4 block text-sm font-bold">Availability<select className={input} value={editing.availability} onChange={e=>setEditing(p=>({...p,availability:e.target.value as Product["availability"]}))}><option>Available</option><option>Out of Stock</option><option>Hidden</option></select></label>
-          <div className="mt-5"><span className="text-sm font-bold">Product image</span><div className="mt-2 flex items-center gap-4">{editing.imageUrl?<img src={editing.imageUrl} alt="Product preview" className="h-24 w-24 rounded-xl object-cover"/>:<div className="grid h-24 w-24 place-items-center rounded-xl border border-dashed border-[#9E86B5] text-[#D4AF37]"><ImagePlus size={28}/></div>}<label className="cursor-pointer rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">{uploading?"Uploading…":<><Upload className="mr-2 inline" size={15}/>Upload image</>}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e=>uploadImage(e.target.files?.[0])}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">JPG, PNG or WebP • maximum 3 MB</p></div>
+          <div className="mt-5"><span className="text-sm font-bold">Product image</span><div className="mt-2 flex items-center gap-4">{editing.imageUrl?<img src={editing.imageUrl} alt="Product preview" className="h-24 w-24 rounded-xl object-cover"/>:<div className="grid h-24 w-24 place-items-center rounded-xl border border-dashed border-[#9E86B5] text-[#D4AF37]"><ImagePlus size={28}/></div>}<label className="cursor-pointer rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">{uploading?"Uploading…":<><Upload className="mr-2 inline" size={15}/>Upload image</>}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e=>uploadImage(e.target.files?.[0])}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">Choose a photo from your phone or computer • JPG, PNG, WebP or GIF • maximum 3 MB</p></div>
           {error&&<p role="alert" className="mt-4 rounded-xl bg-red-950/60 p-3 text-sm text-red-200">{error}</p>}{notice&&<p className="mt-4 rounded-xl bg-emerald-950/60 p-3 text-sm text-emerald-200">{notice}</p>}
           <button disabled={saving||uploading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60"><Save size={17}/>{saving?"Saving…":"Save product"}</button>
         </form>
