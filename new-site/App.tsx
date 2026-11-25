@@ -31,7 +31,7 @@ const numerologyBirthChartImage = "/images/Numerology%20Birth%20Chart.jpg";
 const dowserReadingImage = "/images/Dowser%20Reading.jpg";
 const magicalKnotThreadsImage = "/images/magical%20knot%20threads.jpeg";
 
-const PHONE_DISPLAY = "8920702407";
+const PHONE_DISPLAY = "+91 89207 02407";
 const PHONE_TEL = "tel:+918920702407";
 const WHATSAPP = "https://wa.me/918920702407";
 
