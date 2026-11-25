@@ -19,6 +19,7 @@ export default function ProfilePanel() {
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"profile" | "orders">("profile");
+  const isOwner = user?.email?.toLowerCase() === "divinehealerindu23@gmail.com" && user.emailVerified;
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function ProfilePanel() {
         {tab === "profile" ? <div>
           <p className="text-sm text-gray-600">Signed in as</p><p className="font-bold">{user.email}</p>
           {!user.emailVerified && <p className="mt-3 rounded-xl bg-amber-50 p-3 text-sm text-amber-900">Please verify your email. <button className="font-bold underline" onClick={() => sendEmailVerification(user).then(() => setNotice("Verification email sent again."))}>Resend verification email</button></p>}
-          <a href="/admin" className="mt-4 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-3 text-sm font-bold text-[#32105B]"><Package size={17}/> Stock Manager <span className="ml-auto text-xs font-normal text-gray-500">Admin password required</span></a>
+          {isOwner && <a href="/admin" className="mt-4 flex items-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-3 text-sm font-bold text-[#32105B]"><Package size={17}/> Stock Manager <span className="ml-auto text-xs font-normal text-gray-500">Owner only</span></a>}
           {notice && <p className="mt-3 text-sm text-green-700">{notice}</p>}
         </div> : <div>
           <div className="flex items-center justify-between"><h3 className="font-bold">My Orders &amp; Bookings</h3><span className="text-xs text-gray-500">{orders.length} records</span></div>
