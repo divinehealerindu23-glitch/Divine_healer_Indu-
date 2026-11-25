@@ -1,5 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { AdminPortal, ShopSection } from "./ShopAdmin";
+import ProfilePanel from "./ProfilePanel";
+import { auth, db } from "./firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { MoonStar, Sparkles, Phone, MessageCircle, MapPin, Clock, Heart, Coins, Activity, Flower2, Sun, ShieldCheck, Scale, Briefcase, Compass, Hash, Users, Smartphone, ChevronDown, Check, Star, HandHeart, Eye, BookOpen, ChevronLeft, ChevronRight, Quote, RefreshCw } from "lucide-react";
 const tarotImage = "/images/Taro%20Cards.jpg";
 const crystalHealingImage = "/images/Cristel%20Healing.jpg";
@@ -134,6 +137,26 @@ export default function App() {
       });
       const result = await response.json();
       if (!response.ok || !result.success) throw new Error(result.error || "Your request could not be saved. Please try WhatsApp directly.");
+      if (auth.currentUser) {
+        try {
+          await addDoc(collection(db, "users", auth.currentUser.uid, "bookings"), {
+            uid: auth.currentUser.uid,
+            bookingId: result.bookingId || "",
+            name: name.trim(),
+            email: auth.currentUser.email || "",
+            phone: phone.trim(),
+            service: selectedService,
+            knot: selectedService === "Magical Knot Threads" ? selectedKnot : "",
+            consultationFee: 300,
+            knotPrice: selectedService === "Magical Knot Threads" ? 550 : 0,
+            message: message.trim(),
+            status: "Request received",
+            createdAt: serverTimestamp()
+          });
+        } catch {
+          setFormError("Your request was sent, but it could not be added to your profile history yet. Please check Firestore security rules.");
+        }
+      }
       setSaved({ name: name.trim(), service: selectedService });
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Your request could not be saved. Please try WhatsApp directly.");
@@ -169,7 +192,7 @@ export default function App() {
             <span className="min-w-0 leading-tight"><span className="font-serif-display block truncate text-lg font-bold sm:text-xl">Divine Healer Indu</span><span className="block text-[10px] uppercase tracking-[.22em] text-[var(--lavender)]">Reiki • Humkara • Haleem</span></span>
           </a>
           <nav className="hidden items-center gap-6 text-sm font-semibold lg:flex" aria-label="Main navigation">
-            <a className="hover:text-[var(--gold-soft)]" href="#about">About</a><a className="hover:text-[var(--gold-soft)]" href="#services">Services</a><a className="hover:text-[var(--gold-soft)]" href="#shop">Shop</a><a className="hover:text-[var(--gold-soft)]" href="#daily">Daily Message</a><a className="hover:text-[var(--gold-soft)]" href="#stories">Stories</a><a className="hover:text-[var(--gold-soft)]" href="#faq">FAQ</a>
+            <a className="hover:text-[var(--gold-soft)]" href="#about">About</a><a className="hover:text-[var(--gold-soft)]" href="#services">Services</a><a className="hover:text-[var(--gold-soft)]" href="#shop">Shop</a><a className="hover:text-[var(--gold-soft)]" href="#profile">My Profile</a><a className="hover:text-[var(--gold-soft)]" href="#daily">Daily Message</a><a className="hover:text-[var(--gold-soft)]" href="#stories">Stories</a><a className="hover:text-[var(--gold-soft)]" href="#faq">FAQ</a>
           </nav>
           <div className="flex items-center gap-2">
             <a href={PHONE_TEL} className="hidden rounded-full border border-[var(--gold)] px-4 py-2 text-sm font-bold text-[var(--gold-soft)] sm:inline-flex">Call Now</a>
@@ -177,7 +200,7 @@ export default function App() {
             <button onClick={() => setMenuOpen(v => !v)} aria-expanded={menuOpen} className="rounded-full border border-white/20 px-3 py-2 text-sm lg:hidden">{menuOpen ? "Close" : "Menu"}</button>
           </div>
         </div>
-        {menuOpen && <nav className="border-t border-white/10 px-5 py-4 lg:hidden" aria-label="Mobile navigation"><div className="grid gap-3 font-semibold"><a onClick={() => setMenuOpen(false)} href="#about">About</a><a onClick={() => setMenuOpen(false)} href="#services">Services</a><a onClick={() => setMenuOpen(false)} href="#shop">Shop</a><a onClick={() => setMenuOpen(false)} href="#daily">Daily Message</a><a onClick={() => setMenuOpen(false)} href="#stories">Stories</a><a onClick={() => setMenuOpen(false)} href="#faq">FAQ</a><a onClick={() => setMenuOpen(false)} href="#booking">Book a Session</a></div></nav>}
+        {menuOpen && <nav className="border-t border-white/10 px-5 py-4 lg:hidden" aria-label="Mobile navigation"><div className="grid gap-3 font-semibold"><a onClick={() => setMenuOpen(false)} href="#about">About</a><a onClick={() => setMenuOpen(false)} href="#services">Services</a><a onClick={() => setMenuOpen(false)} href="#shop">Shop</a><a onClick={() => setMenuOpen(false)} href="#profile">My Profile</a><a onClick={() => setMenuOpen(false)} href="#daily">Daily Message</a><a onClick={() => setMenuOpen(false)} href="#stories">Stories</a><a onClick={() => setMenuOpen(false)} href="#faq">FAQ</a><a onClick={() => setMenuOpen(false)} href="#booking">Book a Session</a></div></nav>}
       </header>
 
       <main id="top">
@@ -321,6 +344,8 @@ export default function App() {
             <div id="faq" className="reveal"><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ Questions</p><h3 className="font-serif-display mt-3 text-3xl font-bold">Gentle answers</h3><div className="mt-5 space-y-3">{faqs.map((f, i) => <div key={f.q} className="overflow-hidden rounded-2xl border border-white/10 bg-[#1B0530]"><button onClick={() => setOpenFaq(openFaq === i ? null : i)} aria-expanded={openFaq === i} className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left font-bold">{f.q}<ChevronDown size={20} className={`shrink-0 text-[var(--gold)] transition ${openFaq === i ? "rotate-180" : ""}`} /></button>{openFaq === i && <p className="px-5 pb-5 text-sm leading-relaxed text-[var(--muted)]">{f.a}</p>}</div>)}</div></div>
           </div>
         </section>
+
+        <ProfilePanel />
 
         {/* BOOKING — faded tarot image + heavy purple overlay */}
         <section id="booking" className="relative scroll-mt-24 overflow-hidden px-4 py-14 sm:px-6 sm:py-20">
