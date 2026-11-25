@@ -29,15 +29,16 @@ const marriageGuidanceImage = "/images/Marriage%20Guidance.jpg";
 const careerGuidanceImage = "/images/Career%20Guidance.jpg";
 const numerologyBirthChartImage = "/images/Numerology%20Birth%20Chart.jpg";
 const dowserReadingImage = "/images/Dowser%20Reading.jpg";
+const magicalKnotThreadsImage = "/images/magical%20knot%20threads.jpeg";
 
 const PHONE_DISPLAY = "8920702407";
 const PHONE_TEL = "tel:+918920702407";
 const WHATSAPP = "https://wa.me/918920702407";
 
-type Service = { name: string; icon: React.ReactNode; desc: string; tag: string; image?: string; imageAlt?: string };
+type Service = { name: string; icon: React.ReactNode; desc: string; tag: string; image?: string; imageAlt?: string; price?: string };
 const knotServices = ["Love Knot","Money Knot","Protection Knot","Vastu Knot","Health Knot","Job Knot","Study Knot","Business Knot","Pregnancy Knot","Home Protection Knot","Property Sell Knot"];
 const services: Service[] = [
-  { name: "Magical Knot Threads", icon: <Sparkles size={24} />, desc: "Tie a knot with a clear intention. Choose from love, money, protection, vastu, health, career, study, business, pregnancy, home protection, or property intentions. ₹550 per knot.", tag: "Intention Ritual" },
+  { name: "Magical Knot Threads", icon: <Sparkles size={24} />, desc: "Tie a knot with a clear intention. Choose from love, money, protection, vastu, health, career, study, business, pregnancy, home protection, or property intentions.", tag: "Intention Ritual", image: magicalKnotThreadsImage, imageAlt: "Magical healing knot threads", price: "₹550 per knot" },
   { name: "Tarot Card Reading", icon: <Eye size={24} />, desc: "Clear, compassionate insight for the question on your heart.", tag: "Clarity", image: tarotImage, imageAlt: "Tarot cards for a spiritual reading" },
   { name: "Crystal Healing", icon: <Sparkles size={24} />, desc: "A crystal-focused healing experience to support calm, balance, and intention.", tag: "Energy Healing", image: crystalHealingImage, imageAlt: "Crystal healing" },
   { name: "Mantra Healing", icon: <Flower2 size={24} />, desc: "A devotional mantra healing practice inspired by Maa Tripurasundari.", tag: "Mantra", image: mantraHealingImage, imageAlt: "Maa Tripurasundari" },
@@ -115,7 +116,7 @@ export default function App() {
     return () => io.disconnect();
   }, [serviceTab]);
 
-  const healingServiceNames = ["Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing"];
+  const healingServiceNames = ["Magical Knot Threads", "Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing"];
   const visibleServices = services.filter(s => serviceTab === "Healing" ? healingServiceNames.includes(s.name) : !healingServiceNames.includes(s.name));
 
   const whatsappText = useMemo(() => {
@@ -286,7 +287,7 @@ export default function App() {
               {visibleServices.map((s) => <article key={s.name} className="tarot-card card-sheen group flex flex-col rounded-[24px] border border-[rgba(212,175,55,.4)] bg-[linear-gradient(165deg,rgba(67,26,112,.92),rgba(49,16,85,.94))] p-5 shadow-lg transition hover:-translate-y-1 hover:border-[var(--gold)] hover:shadow-[0_18px_45px_rgba(255,184,77,.22)]">
                 {s.image && <div className="-mx-5 -mt-5 mb-4 overflow-hidden rounded-t-[24px] border-b border-[rgba(212,175,55,.4)]"><img src={s.image} alt={s.imageAlt || s.name} className="h-44 w-full object-cover" loading="lazy" /></div>}
                 <div className="flex items-start justify-between"><span className="grid h-12 w-12 place-items-center rounded-2xl border border-[rgba(212,175,55,.45)] bg-[rgba(27,5,48,.55)] text-[var(--gold-soft)]">{s.icon}</span><span className="rounded-full bg-white/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[var(--lavender-soft)]">{s.tag}</span></div>
-                <h3 className="font-serif-display mt-4 text-xl font-bold leading-snug">{s.name}</h3><p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted)]">{s.desc}</p>
+                <h3 className="font-serif-display mt-4 text-xl font-bold leading-snug">{s.name}</h3><p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--muted)]">{s.desc}</p>{s.price && <p className="mt-3 font-extrabold text-[var(--gold-soft)]">{s.price}</p>}
                 <div className="mt-5 flex items-center gap-2"><button onClick={() => pickService(s.name)} className="flex-1 rounded-full bg-[var(--gold)] px-4 py-2.5 text-sm font-extrabold text-[#2A0A4A]">Book Now</button><a href={WHATSAPP} target="_blank" rel="noopener" aria-label={`Ask about ${s.name} on WhatsApp`} className="grid h-10 w-10 place-items-center rounded-full border border-white/20"><MessageCircle size={18} /></a></div>
               </article>)}
             </div>
