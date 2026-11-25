@@ -239,6 +239,7 @@ export default function App() {
               <p className="mt-4 leading-relaxed text-[var(--muted)]">Through Reiki, Humkara, Haleem, tarot and Akashic readings, and numerology, I offer compassionate, personalized sessions to help you find clarity, reconnect with your inner balance and navigate life’s challenges.</p>
               <p className="mt-4 leading-relaxed text-[var(--muted)]">My intention is to provide a peaceful, supportive space where every person feels heard, respected and guided.</p>
               <p className="mt-5 text-sm font-bold uppercase tracking-[.2em] text-[var(--gold-soft)]">Heal • Align • Manifest</p>
+              <p className="mt-3 font-serif-display text-xl font-semibold italic tracking-wide text-[var(--gold-soft)]">Indu Chaoudhary</p>
               <div className="mt-6 grid gap-3 sm:grid-cols-3">
                 {[["Energy Healing", "Reiki, chakra & aura work"], ["Soul Readings", "Tarot, Akashic & dowsing"], ["Life Guidance", "Numerology & compatibility"]].map(([t, d]) => <div key={t} className="tarot-card rounded-2xl border border-[rgba(212,175,55,.4)] bg-white/5 p-4"><p className="font-bold text-[var(--gold-soft)]">{t}</p><p className="mt-1 text-sm text-[var(--muted)]">{d}</p></div>)}
               </div>
