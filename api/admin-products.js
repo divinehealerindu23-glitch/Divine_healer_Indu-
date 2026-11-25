@@ -19,7 +19,7 @@ function normalize(product) {
   };
 }
 export default async function handler(req, res) {
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
   try {
     if (req.method === "GET") return res.status(200).json({ products: await readProducts() });
     if (req.method === "PUT") {
