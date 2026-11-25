@@ -4,32 +4,32 @@
 @tailwind utilities;
 
 :root{
-  --royal:#2A0A4A;
-  --royal-2:#4B1D7A;
-  --royal-3:#1B0530;
-  --lavender:#C9A7EB;
-  --lavender-soft:#E6D6FF;
+  --royal:#FFF9EE;
+  --royal-2:#4A2B43;
+  --royal-3:#F6F0E5;
+  --lavender:#A58A78;
+  --lavender-soft:#6B5B53;
   --gold:#D4AF37;
   --gold-soft:#F5D67B;
-  --ink:#FFFDF8;
-  --muted:#D9C9F1;
-  --surface:#311055;
-  --card:#3B1661;
-  --line:rgba(212,175,55,.32);
+  --ink:#302A2C;
+  --muted:#746B67;
+  --surface:#F4EBDD;
+  --card:#FFF9EE;
+  --line:rgba(182,138,58,.32);
 }
 @media (prefers-color-scheme: dark){
-  :root{ --surface:#291043; --card:#34145B; }
+  :root{ --surface:#F4EBDD; --card:#FFF9EE; }
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;background:var(--royal-3);color:var(--ink);font-family:'Manrope',system-ui,sans-serif}
+body{margin:0;background:var(--royal-3);color:#302A2C;font-family:'Manrope',system-ui,sans-serif}
 .font-serif-display{font-family:'Playfair Display','Cormorant Garamond',Georgia,serif}
 .font-cormorant{font-family:'Cormorant Garamond',Georgia,serif}
 .gold-text{background:linear-gradient(100deg,#F5D67B,#D4AF37 48%,#FFF2B8 72%,#C49A2B);-webkit-background-clip:text;background-clip:text;color:transparent}
 .gold-line{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
-.mandala{background-image:radial-gradient(circle at center,transparent 0 22%,rgba(212,175,55,.14) 23%,transparent 24%),radial-gradient(circle at center,transparent 0 38%,rgba(201,167,235,.13) 39%,transparent 40%),radial-gradient(circle at center,transparent 0 55%,rgba(212,175,55,.10) 56%,transparent 57%);border:1px solid rgba(212,175,55,.28)}
+.mandala{background-image:radial-gradient(circle at center,transparent 0 22%,rgba(212,175,55,.14) 23%,transparent 24%),radial-gradient(circle at center,transparent 0 38%,rgba(182,138,58,.10) 39%,transparent 40%),radial-gradient(circle at center,transparent 0 55%,rgba(212,175,55,.10) 56%,transparent 57%);border:1px solid rgba(212,175,55,.28)}
 .card-sheen{position:relative;overflow:hidden}
-.card-sheen:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,214,123,.12),transparent 35%,rgba(201,167,235,.08) 70%);pointer-events:none}
+.card-sheen:before{content:"";position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,214,123,.12),transparent 35%,rgba(182,138,58,.05) 70%);pointer-events:none}
 @keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes twinkle{0%,100%{opacity:.25;transform:scale(.8)}50%{opacity:1;transform:scale(1.15)}}
 @keyframes spinSlow{to{transform:rotate(360deg)}}
@@ -39,8 +39,8 @@ body{margin:0;background:var(--royal-3);color:var(--ink);font-family:'Manrope',s
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 .marquee{animation:marquee 28s linear infinite}
 .shimmer-text{background-size:220% auto;animation:shimmer 6s ease-in-out infinite}
-.hero-scrim{background:linear-gradient(180deg,rgba(26,8,51,.58),rgba(26,8,51,.42) 55%,rgba(26,8,51,.68));box-shadow:0 18px 60px rgba(0,0,0,.28);backdrop-filter:blur(2px)}
-.tarot-card{background-image:linear-gradient(160deg,rgba(245,214,123,.06),transparent 38%,rgba(201,167,235,.05))}
+.hero-scrim{background:linear-gradient(180deg,rgba(49,29,43,.48),rgba(49,29,43,.30) 55%,rgba(49,29,43,.58));box-shadow:0 18px 60px rgba(0,0,0,.28);backdrop-filter:blur(2px)}
+.tarot-card{background-image:linear-gradient(160deg,rgba(245,214,123,.06),transparent 38%,rgba(182,138,58,.04))}
 .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
 .reveal.is-visible{opacity:1;transform:translateY(0)}
 .fade-up{animation:fadeUp .55s ease both}
@@ -49,6 +49,6 @@ body{margin:0;background:var(--royal-3);color:var(--ink);font-family:'Manrope',s
 .spin-slow{animation:spinSlow 32s linear infinite}
 .drift{animation:drift 7s ease-in-out infinite}
 .star{position:absolute;border-radius:9999px;background:#FFF4C4;box-shadow:0 0 10px #F5D67B;animation:twinkle 3s ease-in-out infinite}
-input,select,textarea{color:#1B0530}
+input,select,textarea{color:#302A2C}
 input:focus,select:focus,textarea:focus{outline:3px solid rgba(212,175,55,.55);outline-offset:1px}
-::selection{background:#D4AF37;color:#2A0A4A}
+::selection{background:#D4AF37;color:#302A2C}
