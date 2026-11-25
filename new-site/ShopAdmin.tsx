@@ -98,15 +98,20 @@ export function AdminPortal() {
   }
   async function uploadImage(file?: File) {
     if(!file) return;
+    setError(""); setNotice("");
     if(!file.type.startsWith("image/")) {setError("Please choose an image file.");return;}
     if(file.size>3*1024*1024) {setError("Please choose an image smaller than 3 MB.");return;}
-    setUploading(true);setError("");
+    setUploading(true);setNotice("Uploading your image…");
     try {
-      const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(",")[1]);reader.onerror=reject;reader.readAsDataURL(file);});
-      const r=await fetch("/api/admin-upload",{method:"POST",headers:await adminHeaders(),body:JSON.stringify({filename:file.name,mimeType:file.type,base64})});
-      const data=await r.json();if(!r.ok)throw new Error(data.error||"Image upload failed.");
-      setEditing(p=>({...p,imageUrl:data.url}));setNotice("Product image uploaded.");
-    } catch(e){setError(e instanceof Error?e.message:"Image upload failed.");}
+      const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const result=String(reader.result||"");const comma=result.indexOf(",");if(comma<0)reject(new Error("Could not read the selected image. Please try again."));else resolve(result.slice(comma+1));};reader.onerror=()=>reject(new Error("Could not read the selected image. Please try again."));reader.readAsDataURL(file);});
+      const r=await fetch("/api/admin-upload",{method:"POST",headers:await adminHeaders(),body:JSON.stringify({filename:file.name,mimeType:file.type||"image/jpeg",base64})});
+      const responseText=await r.text();
+      let data:any={};
+      try { data=JSON.parse(responseText); } catch { throw new Error("The upload server returned an unexpected response (HTTP "+r.status+"). Please try again."); }
+      if(!r.ok) throw new Error(data.error||("Image upload failed (HTTP "+r.status+")."));
+      if(typeof data.url!=="string" || !data.url.startsWith("https://")) throw new Error("The image was received, but the server did not return a valid image link. Please try again.");
+      setEditing(p=>({...p,imageUrl:data.url}));setNotice("Product image uploaded successfully. You can now save the product.");
+    } catch(e){setNotice("");setError(e instanceof Error?e.message:"Image upload failed. Please try again.");}
     finally{setUploading(false);}
   }
   async function removeProduct(id:string) {
@@ -129,7 +134,7 @@ export function AdminPortal() {
           <label className="mt-4 block text-sm font-bold">Description<textarea className={input} rows={3} value={editing.description} onChange={e=>setEditing(p=>({...p,description:e.target.value}))} placeholder="Describe your product…"/></label>
           <div className="mt-4 grid grid-cols-2 gap-4"><label className="block text-sm font-bold">Price<input className={input} value={editing.price} onChange={e=>setEditing(p=>({...p,price:e.target.value}))} placeholder="e.g. 999"/></label><label className="block text-sm font-bold">Stock quantity<input className={input} type="number" min="0" step="1" value={editing.stock} onChange={e=>setEditing(p=>({...p,stock:Math.max(0,Number(e.target.value))}))}/></label></div>
           <label className="mt-4 block text-sm font-bold">Availability<select className={input} value={editing.availability} onChange={e=>setEditing(p=>({...p,availability:e.target.value as Product["availability"]}))}><option>Available</option><option>Out of Stock</option><option>Hidden</option></select></label>
-          <div className="mt-5"><span className="text-sm font-bold">Product image</span><div className="mt-2 flex items-center gap-4">{editing.imageUrl?<img src={editing.imageUrl} alt="Product preview" className="h-24 w-24 rounded-xl object-cover"/>:<div className="grid h-24 w-24 place-items-center rounded-xl border border-dashed border-[#9E86B5] text-[#D4AF37]"><ImagePlus size={28}/></div>}<label className="cursor-pointer rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">{uploading?"Uploading…":<><Upload className="mr-2 inline" size={15}/>Upload image</>}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={e=>uploadImage(e.target.files?.[0])}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">Choose a photo from your phone or computer • JPG, PNG, WebP or GIF • maximum 3 MB</p></div>
+          <div className="mt-5"><span className="text-sm font-bold">Product image</span><div className="mt-2 flex items-center gap-4">{editing.imageUrl?<img src={editing.imageUrl} alt="Product preview" className="h-24 w-24 rounded-xl object-cover"/>:<div className="grid h-24 w-24 place-items-center rounded-xl border border-dashed border-[#9E86B5] text-[#D4AF37]"><ImagePlus size={28}/></div>}<label className="cursor-pointer rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">{uploading?"Uploading…":<><Upload className="mr-2 inline" size={15}/>Upload image</>}<input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" className="hidden" disabled={uploading} onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value="";void uploadImage(file);}}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">Choose a photo from your phone or computer • JPG, PNG, WebP or GIF • maximum 3 MB</p></div>
           {error&&<p role="alert" className="mt-4 rounded-xl bg-red-950/60 p-3 text-sm text-red-200">{error}</p>}{notice&&<p className="mt-4 rounded-xl bg-emerald-950/60 p-3 text-sm text-emerald-200">{notice}</p>}
           <button disabled={saving||uploading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60"><Save size={17}/>{saving?"Saving…":"Save product"}</button>
         </form>
