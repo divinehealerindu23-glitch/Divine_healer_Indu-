@@ -18,6 +18,7 @@ export default async function handler(req, res) {
     const safeName = String(filename || "product").replace(/[^a-zA-Z0-9-_]/g, "-").slice(0, 50);
     const blob = await put("products/images/" + safeName + "-" + randomUUID() + "." + ext, buffer, {
       access: "public",
+      token: process.env.BLOB_READ_WRITE_TOKEN,
       addRandomSuffix: false,
       contentType: mimeType
     });
