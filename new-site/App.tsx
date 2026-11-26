@@ -181,6 +181,7 @@ export default function App() {
           prefill: { name: name.trim(), contact: phone.trim() },
           notes: { service: selectedService },
           theme: { color: "#D4AF37" },
+          modal: { ondismiss: () => reject(new Error("Payment window closed. Your appointment has not been confirmed.")) },
           handler: async (payment: any) => {
             try {
               const response = await fetch("/api/booking", {
