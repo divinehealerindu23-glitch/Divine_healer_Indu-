@@ -49,6 +49,14 @@ export default async function handler(req, res) {
       return res.status(400).json({ success: false, error: "Payment signature could not be verified. No booking was confirmed." });
     }
 
+    const orderResponse = await fetch("https://api.razorpay.com/v1/orders/" + encodeURIComponent(razorpay_order_id), {
+      headers: { Authorization: authorization }
+    });
+    const order = await orderResponse.json();
+    if (!orderResponse.ok || order.amount !== AMOUNT_PAISE || order.currency !== "INR" || order.notes?.service !== booking.service) {
+      return res.status(400).json({ success: false, error: "The payment order does not match the selected service and ₹300 fee. No booking was confirmed." });
+    }
+
     const paymentResponse = await fetch("https://api.razorpay.com/v1/payments/" + encodeURIComponent(razorpay_payment_id), {
       headers: { Authorization: authorization }
     });
