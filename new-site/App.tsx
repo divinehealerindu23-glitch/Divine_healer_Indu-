@@ -109,7 +109,6 @@ export default function App() {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [selectedKnot, setSelectedKnot] = useState("Love Knot");
-  const [includeKnotConsultation, setIncludeKnotConsultation] = useState(false);
   const [readingFormat, setReadingFormat] = useState("3 questions");
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -133,10 +132,11 @@ export default function App() {
   const isTarot = selectedService === "Tarot Card Reading";
   const isAkashic = selectedService === "Akashic Reading";
   const isKnot = selectedService === "Magical Knot Threads";
-  const consultationFee = isKnot ? (includeKnotConsultation ? 300 : 0) : 300;
-  const readingFee = isTarot ? (readingFormat === "3 questions" ? 550 : 1100) : isAkashic ? 1100 : 0;
-  const knotPrice = isKnot ? 550 : 0;
-  const totalFee = consultationFee + readingFee + knotPrice;
+  // A flat ₹300 advance consultation/booking payment is collected for every appointment.
+  const consultationFee = 300;
+  const readingFee = 0;
+  const knotPrice = 0;
+  const totalFee = 300;
 
   const whatsappText = useMemo(() => {
     const lines = [`Hello Divine Healer Indu,`, ` `, `I would like to book a service.`, `Name: ${name || "[Your name]"}`, `Phone: ${phone || "[Your phone]"}`, `Service: ${selectedService}`, isTarot ? `Tarot option: ${readingFormat}` : "", isAkashic ? "Akashic Reading: 1 question" : "", isKnot ? `Knot: ${selectedKnot}` : "", message ? `Message: ${message}` : ""].filter(Boolean);
@@ -150,13 +150,69 @@ export default function App() {
     if (phone.replace(/\D/g, "").length < 10) { setFormError("Please enter a complete phone number with at least 10 digits."); return; }
     setIsSubmitting(true);
     try {
-      const response = await fetch("/api/booking", {
+      const orderResponse = await fetch("/api/razorpay-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), phone: phone.trim(), service: selectedService, readingOption: isTarot ? readingFormat : isAkashic ? "Question reading" : "", readingFee, knot: isKnot ? selectedKnot : "", consultationFee, knotPrice, totalFee, message: message.trim() })
+        body: JSON.stringify({ name: name.trim(), service: selectedService })
       });
-      const result = await response.json();
-      if (!response.ok || !result.success) throw new Error(result.error || "Your request could not be saved. Please try WhatsApp directly.");
+      const order = await orderResponse.json();
+      if (!orderResponse.ok || !order.success) throw new Error(order.error || "Unable to start secure payment. Please try again.");
+
+      if (!(window as any).Razorpay) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Secure payment could not be loaded. Please refresh and try again."));
+          document.body.appendChild(script);
+        });
+      }
+      const RazorpayCheckout = (window as any).Razorpay;
+      if (!RazorpayCheckout) throw new Error("Secure payment is unavailable. Please try again.");
+
+      const result = await new Promise<any>((resolve, reject) => {
+        const checkout = new RazorpayCheckout({
+          key: order.keyId,
+          amount: order.amount,
+          currency: order.currency,
+          name: "Divine Healer Indu",
+          description: "₹300 consultation and appointment booking fee",
+          order_id: order.orderId,
+          prefill: { name: name.trim(), contact: phone.trim() },
+          notes: { service: selectedService },
+          theme: { color: "#D4AF37" },
+          handler: async (payment: any) => {
+            try {
+              const response = await fetch("/api/booking", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  name: name.trim(),
+                  phone: phone.trim(),
+                  service: selectedService,
+                  readingOption: isTarot ? readingFormat : isAkashic ? "Question reading" : "",
+                  knot: isKnot ? selectedKnot : "",
+                  message: message.trim(),
+                  razorpay_order_id: payment.razorpay_order_id,
+                  razorpay_payment_id: payment.razorpay_payment_id,
+                  razorpay_signature: payment.razorpay_signature
+                })
+              });
+              const savedBooking = await response.json();
+              if (!response.ok || !savedBooking.success) {
+                throw new Error(savedBooking.error || "Payment was received, but booking could not be saved. Please contact Indu with payment ID " + payment.razorpay_payment_id + ".");
+              }
+              resolve({ ...savedBooking, paymentId: payment.razorpay_payment_id });
+            } catch (error) {
+              reject(error);
+            }
+          }
+        });
+        checkout.on("payment.failed", (event: any) => {
+          reject(new Error(event?.error?.description || "Payment failed. Your appointment has not been confirmed."));
+        });
+        checkout.open();
+      });
       if (auth.currentUser) {
         try {
           await addDoc(collection(db, "users", auth.currentUser.uid, "bookings"), {
@@ -173,7 +229,10 @@ export default function App() {
             knotPrice,
             totalFee,
             message: message.trim(),
-            status: "Request received",
+            status: "Payment received — booking confirmed",
+            paymentAmount: 300,
+            paymentCurrency: "INR",
+            paymentId: result.paymentId || "",
             createdAt: serverTimestamp()
           });
         } catch {
@@ -374,7 +433,7 @@ export default function App() {
               <div className="grid lg:grid-cols-[.9fr_1.1fr]">
                 <div className="p-6 sm:p-9"><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold-soft)]">✦ Booking &amp; Contact</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.2rem)] font-bold leading-tight">Your healing begins with one <span className="gold-text italic">brave step</span></h2><p className="mt-4 leading-relaxed text-[var(--muted)]">Share a few details, then send your booking request directly to Indu on WhatsApp.</p><div className="mt-7 space-y-4"><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><MessageCircle className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">Booking through WhatsApp</span><span className="text-sm text-[var(--muted)]">Indu will personally confirm availability, timing, and how your service will be provided.</span></span></div></div><a href={WHATSAPP} target="_blank" rel="noopener" className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 font-extrabold text-[#07331A]"><MessageCircle /> Message on WhatsApp</a></div>
                 <div className="bg-[var(--ink)] p-6 text-[#1B0530] sm:p-9">
-                  {saved ? <div className="flex h-full flex-col justify-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-[#E9F7E9] text-green-700"><Check size={32} /></span><h3 className="font-serif-display mt-5 text-3xl font-bold">Thank you, {saved.name}.</h3><p className="mt-3 leading-relaxed text-gray-700">Your request for <strong>{saved.service}</strong> is ready. Send the prefilled WhatsApp message below so Indu can receive your details and confirm your session. Your appointment is not confirmed until Indu replies.</p><a href={whatsappText} target="_blank" rel="noopener" className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-extrabold text-[#07331A]"><MessageCircle /> Open WhatsApp Message</a><button onClick={() => { setSaved(null); setName(""); setPhone(""); setMessage(""); }} className="mt-4 w-fit rounded-full border border-[#2A0A4A] px-5 py-2 font-bold">Make another request</button></div> : <form onSubmit={submitBooking}><h3 className="font-serif-display text-2xl font-bold">Request a session</h3><p className="mt-1 text-sm text-gray-600">Your details will be included in a WhatsApp message to Indu. She will confirm availability, timing, and service format personally.</p><label className="mt-6 block text-sm font-bold" htmlFor="name">Full name</label><input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="phone">Phone number</label><input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone number" inputMode="tel" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="service">Service</label><select id="service" value={selectedService} onChange={e => setSelectedService(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{services.map(s => <option key={s.name}>{s.name}</option>)}</select>{isTarot && <><label className="mt-4 block text-sm font-bold" htmlFor="readingFormat">Tarot reading option</label><select id="readingFormat" value={readingFormat} onChange={e => setReadingFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3"><option value="3 questions">3 questions</option><option value="30 minutes">30-minute session (no question limit)</option></select></>}{isKnot && <><label className="mt-4 block text-sm font-bold" htmlFor="knot">Choose your intention knot</label><select id="knot" value={selectedKnot} onChange={e => setSelectedKnot(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{knotServices.map(k => <option key={k}>{k}</option>)}</select><label className="mt-4 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm"><input type="checkbox" checked={includeKnotConsultation} onChange={e => setIncludeKnotConsultation(e.target.checked)} className="mt-1" /><span><strong>Add a consultation (₹300)</strong><span className="block text-gray-600">Optional. Leave unchecked to order the knot thread only.</span></span></label></>}<label className="mt-4 block text-sm font-bold" htmlFor="message">Message <span className="font-normal text-gray-500">(optional)</span></label><textarea id="message" value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Share your concern in a few words…" className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 [overflow-wrap:anywhere]" />{formError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{formError}</p>}<button disabled={isSubmitting} className="mt-6 w-full rounded-full bg-[#2A0A4A] px-5 py-3.5 font-extrabold text-white disabled:cursor-wait disabled:opacity-60">{isSubmitting ? "Saving your request…" : "Submit Booking Request"}</button><p className="mt-3 text-center text-xs text-gray-500">Your request is saved first. Then you can send the details to Indu on WhatsApp.</p></form>}
+                  {saved ? <div className="flex h-full flex-col justify-center"><span className="grid h-16 w-16 place-items-center rounded-full bg-[#E9F7E9] text-green-700"><Check size={32} /></span><h3 className="font-serif-display mt-5 text-3xl font-bold">Thank you, {saved.name}.</h3><p className="mt-3 leading-relaxed text-gray-700">Your ₹300 payment has been received and your booking for <strong>{saved.service}</strong> is confirmed. Indu will contact you to coordinate your appointment timing. You can also share your details with her on WhatsApp.</p><a href={whatsappText} target="_blank" rel="noopener" className="mt-6 inline-flex w-fit items-center gap-2 rounded-full bg-[#25D366] px-6 py-3 font-extrabold text-[#07331A]"><MessageCircle /> Message Indu on WhatsApp</a><button onClick={() => { setSaved(null); setName(""); setPhone(""); setMessage(""); }} className="mt-4 w-fit rounded-full border border-[#2A0A4A] px-5 py-2 font-bold">Make another request</button></div> : <form onSubmit={submitBooking}><h3 className="font-serif-display text-2xl font-bold">Request a session</h3><p className="mt-1 text-sm text-gray-600">Pay the ₹300 consultation and booking fee securely to submit your appointment. Your booking is confirmed only after payment verification.</p><label className="mt-6 block text-sm font-bold" htmlFor="name">Full name</label><input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="phone">Phone number</label><input id="phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="Your phone number" inputMode="tel" required className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3" /><label className="mt-4 block text-sm font-bold" htmlFor="service">Service</label><select id="service" value={selectedService} onChange={e => setSelectedService(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{services.map(s => <option key={s.name}>{s.name}</option>)}</select>{isTarot && <><label className="mt-4 block text-sm font-bold" htmlFor="readingFormat">Tarot reading option</label><select id="readingFormat" value={readingFormat} onChange={e => setReadingFormat(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3"><option value="3 questions">3 questions</option><option value="30 minutes">30-minute session (no question limit)</option></select></>}{isKnot && <><label className="mt-4 block text-sm font-bold" htmlFor="knot">Choose your intention knot</label><select id="knot" value={selectedKnot} onChange={e => setSelectedKnot(e.target.value)} className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3">{knotServices.map(k => <option key={k}>{k}</option>)}</select></>}<label className="mt-4 block text-sm font-bold" htmlFor="message">Message <span className="font-normal text-gray-500">(optional)</span></label><textarea id="message" value={message} onChange={e => setMessage(e.target.value)} rows={4} placeholder="Share your concern in a few words…" className="mt-2 w-full rounded-xl border border-gray-300 bg-white px-4 py-3 [overflow-wrap:anywhere]" />{formError && <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{formError}</p>}<button disabled={isSubmitting} className="mt-6 w-full rounded-full bg-[#2A0A4A] px-5 py-3.5 font-extrabold text-white disabled:cursor-wait disabled:opacity-60">{isSubmitting ? "Processing secure payment…" : "Pay ₹300 & Confirm Booking"}</button><p className="mt-3 text-center text-xs text-gray-500">₹300 consultation and booking fee. Secure payment by Razorpay. Your booking is saved only after payment verification.</p></form>}
                 </div>
               </div>
             </div>
