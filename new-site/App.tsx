@@ -52,10 +52,12 @@ const services: Service[] = [
   { name: "Black Magic Removal", icon: <ShieldCheck size={24} />, desc: "Safe, calm clearing work to help you feel light and secure.", tag: "Clearing", image: blackMagicRemovalImage, imageAlt: "Black magic removal" },
   { name: "Legal Matters Healing", icon: <Scale size={24} />, desc: "Steady, focused energy for clarity during legal challenges.", tag: "Clarity", image: legalMattersHealingImage, imageAlt: "Legal matters healing" },
   { name: "Career Healing", icon: <Briefcase size={24} />, desc: "Clear career blocks and open the path to purposeful work.", tag: "Career", image: careerHealingImage, imageAlt: "Career healing" },
-  { name: "Past Life Cord Cutting", icon: <Sparkles size={24} />, desc: "A 21-day healing journey with 3 live sessions and rituals.", tag: "Cord Cutting", price: "21 days • 3 live sessions & rituals — ₹6,501" },
-  { name: "3rd Party Removal", icon: <ShieldCheck size={24} />, desc: "A focused 21-day process with 3 live sessions.", tag: "Relationship Healing", price: "21 days • 3 live sessions — ₹6,501" },
-  { name: "Trauma Healing", icon: <Heart size={24} />, desc: "A supportive 21-day healing journey with 3 live sessions.", tag: "Emotional Healing", price: "21 days • 3 live sessions — ₹6,501" },
-  { name: "Toxic Relationship Cord Cutting", icon: <Heart size={24} />, desc: "A 21-day cord-cutting journey with 3 live sessions.", tag: "Cord Cutting", price: "21 days • 3 live sessions — ₹6,501" },
+  { name: "Relationship Cord Cutting", icon: <Heart size={24} />, desc: "A supportive spiritual practice to help release unhealthy emotional attachments, strengthen boundaries, and make space for healthier connections.", tag: "Relationship Healing" },
+  { name: "Karmic Healing", icon: <Sparkles size={24} />, desc: "Explore recurring life patterns through a reflective spiritual healing practice focused on insight, balance, and personal growth.", tag: "Spiritual Healing" },
+  { name: "Past Life Cord Cutting", icon: <Sparkles size={24} />, desc: "A spiritual cord-cutting journey to reflect on past-life connections and release attachments that may feel emotionally limiting.", tag: "Cord Cutting", price: "21 days • 3 live sessions & rituals — ₹6,501" },
+  { name: "3rd Party Removal", icon: <ShieldCheck size={24} />, desc: "Spiritual support for navigating perceived third-party interference, gaining clarity, and focusing on trust and healthy relationship boundaries.", tag: "Relationship Healing", price: "21 days • 3 live sessions — ₹6,501" },
+  { name: "Trauma Healing", icon: <Heart size={24} />, desc: "A gentle, compassionate spiritual support journey centred on emotional grounding, self-kindness, and reconnecting with inner strength.", tag: "Emotional Healing", price: "21 days • 3 live sessions — ₹6,501" },
+  { name: "Toxic Relationship Cord Cutting", icon: <Heart size={24} />, desc: "A guided spiritual practice to help loosen unhealthy emotional ties, reclaim personal space, and move forward with greater clarity.", tag: "Cord Cutting", price: "21 days • 3 live sessions — ₹6,501" },
   { name: "Dowser Reading", icon: <Compass size={24} />, desc: "Intuitive dowsing guidance for decisions and direction.", tag: "Direction", image: dowserReadingImage, imageAlt: "Dowser reading" },
   { name: "Numerology Birth Chart", icon: <Hash size={24} />, desc: "Discover the numbers shaping your personality and timing.", tag: "Numerology", image: numerologyBirthChartImage, imageAlt: "Numerology birth chart" },
   { name: "Career Guidance", icon: <Briefcase size={24} />, desc: "Practical, intuitive guidance for your next career step.", tag: "Career", image: careerGuidanceImage, imageAlt: "Career guidance" },
@@ -122,7 +124,7 @@ export default function App() {
     return () => io.disconnect();
   }, [serviceTab]);
 
-  const healingServiceNames = ["Magical Knot Threads", "Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing", "Past Life Cord Cutting", "3rd Party Removal", "Trauma Healing", "Toxic Relationship Cord Cutting"];
+  const healingServiceNames = ["Magical Knot Threads", "Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing", "Relationship Cord Cutting", "Karmic Healing", "Past Life Cord Cutting", "3rd Party Removal", "Trauma Healing", "Toxic Relationship Cord Cutting"];
   const visibleServices = services.filter(s => serviceTab === "Healing" ? healingServiceNames.includes(s.name) : !healingServiceNames.includes(s.name));
   const isTarot = selectedService === "Tarot Card Reading";
   const isAkashic = selectedService === "Akashic Reading";
