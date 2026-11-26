@@ -63,7 +63,6 @@ const services: Service[] = [
   { name: "Trauma Healing", icon: <Heart size={24} />, desc: "A gentle, compassionate spiritual support journey centred on emotional grounding, self-kindness, and reconnecting with inner strength.", tag: "Emotional Healing", image: traumaHealingImage, imageAlt: "Trauma healing", price: "21 days • 3 live sessions — ₹6,501" },
   { name: "Toxic Relationship Cord Cutting", icon: <Heart size={24} />, desc: "A guided spiritual practice to help loosen unhealthy emotional ties, reclaim personal space, and move forward with greater clarity.", tag: "Cord Cutting", image: toxicRelationshipCordCuttingImage, imageAlt: "Toxic relationship cord cutting", price: "21 days • 3 live sessions — ₹6,501" },
   { name: "Dowser Reading", icon: <Compass size={24} />, desc: "Intuitive dowsing guidance for decisions and direction.", tag: "Direction", image: dowserReadingImage, imageAlt: "Dowser reading" },
-  { name: "Numerology Birth Chart", icon: <Hash size={24} />, desc: "Discover the numbers shaping your personality and timing.", tag: "Numerology", image: numerologyBirthChartImage, imageAlt: "Numerology birth chart" },
   { name: "Career Guidance", icon: <Briefcase size={24} />, desc: "Practical, intuitive guidance for your next career step.", tag: "Career", image: careerGuidanceImage, imageAlt: "Career guidance" },
   { name: "Marriage Guidance", icon: <Users size={24} />, desc: "Kind counsel for marriage, partnership, and family harmony.", tag: "Relationships", image: marriageGuidanceImage, imageAlt: "Marriage guidance" },
   { name: "Marriage Charts", icon: <Heart size={24} />, desc: "Thoughtful chart insight for marriage timing and harmony.", tag: "Relationships", image: marriageChartsImage, imageAlt: "Marriage charts" },
@@ -71,8 +70,22 @@ const services: Service[] = [
   { name: "Money Guidance", icon: <Coins size={24} />, desc: "Practical spiritual guidance for money choices and growth.", tag: "Abundance", image: moneyGuidanceImage, imageAlt: "Money guidance" },
   { name: "Life Problems Guidance", icon: <Compass size={24} />, desc: "A calm space to untangle life’s challenges, one step at a time.", tag: "Guidance", image: lifeProblemsGuidanceImage, imageAlt: "Life problems guidance" },
   { name: "Health Guidance", icon: <Activity size={24} />, desc: "Gentle direction to support your healing and daily balance.", tag: "Wellbeing", image: healthGuidanceImage, imageAlt: "Health guidance" },
-  { name: "Name Compatibility", icon: <Hash size={24} />, desc: "Explore the energy and harmony carried within names.", tag: "Numerology", image: nameCompatibilityImage, imageAlt: "Name compatibility" },
-  { name: "Mobile Compatibility", icon: <Smartphone size={24} />, desc: "Check the energy of a mobile number and its influence.", tag: "Numerology", image: mobileCompatibilityImage, imageAlt: "Mobile compatibility" },
+  { name: "Mulank - Root Number", icon: <Hash size={24} />, desc: "From your date of birth — understand your personality, nature, and strengths.", tag: "Numerology", image: numerologyBirthChartImage, imageAlt: "Numerology birth chart" },
+  { name: "Bhagyank - Destiny Number", icon: <Star size={24} />, desc: "From your full date of birth — explore your life path, karma, and destiny.", tag: "Numerology" },
+  { name: "Naamank - Name Numerology", icon: <Hash size={24} />, desc: "Lucky name correction for success, money, and fame.", tag: "Numerology", image: nameCompatibilityImage, imageAlt: "Name numerology" },
+  { name: "Personal Year Number", icon: <Sun size={24} />, desc: "Discover what this year may bring for love, money, career, and health.", tag: "Numerology" },
+  { name: "Personal Month & Day Number", icon: <Clock size={24} />, desc: "Find supportive dates for important work, meetings, launches, and travel.", tag: "Numerology" },
+  { name: "Lucky Number & Lucky Colour", icon: <Sparkles size={24} />, desc: "Explore your lucky numbers, colours, days, and directions.", tag: "Numerology" },
+  { name: "Lucky Mobile Number Numerology", icon: <Smartphone size={24} />, desc: "Check the numerology of your mobile number and whether it feels aligned with your goals.", tag: "Numerology", image: mobileCompatibilityImage, imageAlt: "Mobile number numerology" },
+  { name: "Business Name Numerology", icon: <Briefcase size={24} />, desc: "Explore a lucky business, shop, or brand name for growth and profit.", tag: "Numerology" },
+  { name: "Baby Name Numerology", icon: <Heart size={24} />, desc: "Choose a meaningful, powerful, and blessed name for your baby.", tag: "Numerology" },
+  { name: "Marriage / Compatibility Numerology", icon: <Users size={24} />, desc: "Explore partner compatibility through numbers — love, understanding, and marriage.", tag: "Numerology" },
+  { name: "House / Vehicle Number Numerology", icon: <MapPin size={24} />, desc: "Explore the numerology of your house, flat, or car number.", tag: "Numerology" },
+  { name: "Kua Number - Feng Shui Numerology", icon: <Compass size={24} />, desc: "Discover your personal Kua number and supportive directions for sleeping and sitting.", tag: "Numerology" },
+  { name: "Lo Shu Grid", icon: <Flower2 size={24} />, desc: "Explore your personal energy map and the meanings associated with missing numbers.", tag: "Numerology" },
+  { name: "Chaldean Numerology", icon: <BookOpen size={24} />, desc: "Explore the ancient Chaldean method, often used for name and business numerology.", tag: "Numerology" },
+  { name: "Vedic Numerology", icon: <Sun size={24} />, desc: "Explore the Indian Vedic approach to karma, dasha, and life lessons through numbers.", tag: "Numerology" },
+  { name: "Angel Numbers", icon: <Sparkles size={24} />, desc: "Explore possible meanings of repeating numbers such as 111, 222, 333, 444, 777, and 888.", tag: "Numerology" },
 ];
 
 const faqs = [
@@ -113,7 +126,7 @@ export default function App() {
   const [formError, setFormError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [saved, setSaved] = useState<{ name: string; service: string } | null>(null);
-  const [serviceTab, setServiceTab] = useState<"Healing" | "Guidance">("Healing");
+  const [serviceTab, setServiceTab] = useState<"Healing" | "Guidance" | "Numerology">("Healing");
   const [messageIndex, setMessageIndex] = useState(0);
   const [messageRevealed, setMessageRevealed] = useState(false);
   const [storyIndex, setStoryIndex] = useState(0);
@@ -128,7 +141,8 @@ export default function App() {
   }, [serviceTab]);
 
   const healingServiceNames = ["Magical Knot Threads", "Crystal Healing", "Mantra Healing", "Money Healing", "Love & Marriage Healing", "Health Healing", "7 Chakra Healing", "Aura Cleansing", "Aura Healing", "Black Magic Removal", "Legal Matters Healing", "Career Healing", "Relationship Cord Cutting", "Karmic Healing", "Past Life Cord Cutting", "3rd Party Removal", "Trauma Healing", "Toxic Relationship Cord Cutting"];
-  const visibleServices = services.filter(s => serviceTab === "Healing" ? healingServiceNames.includes(s.name) : !healingServiceNames.includes(s.name));
+  const numerologyServiceNames = ["Mulank - Root Number", "Bhagyank - Destiny Number", "Naamank - Name Numerology", "Personal Year Number", "Personal Month & Day Number", "Lucky Number & Lucky Colour", "Lucky Mobile Number Numerology", "Business Name Numerology", "Baby Name Numerology", "Marriage / Compatibility Numerology", "House / Vehicle Number Numerology", "Kua Number - Feng Shui Numerology", "Lo Shu Grid", "Chaldean Numerology", "Vedic Numerology", "Angel Numbers"];
+  const visibleServices = services.filter(s => serviceTab === "Healing" ? healingServiceNames.includes(s.name) : serviceTab === "Numerology" ? numerologyServiceNames.includes(s.name) : !healingServiceNames.includes(s.name) && !numerologyServiceNames.includes(s.name));
   const isTarot = selectedService === "Tarot Card Reading";
   const isAkashic = selectedService === "Akashic Reading";
   const isKnot = selectedService === "Magical Knot Threads";
@@ -359,7 +373,7 @@ export default function App() {
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,8,51,.92),rgba(42,10,74,.88)_55%,rgba(26,8,51,.94))]" aria-hidden="true" />
           <div className="relative mx-auto max-w-7xl px-4 sm:px-6">
             <div className="reveal flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold)]">✦ Sacred Services</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.4rem)] font-bold">Choose Your Healing <span className="gold-text italic">Path</span></h2><p className="mt-3 max-w-2xl text-[var(--muted)]">Every card opens a door. Select a service to begin your booking — or call for guidance on which path is right for you.</p><p className="mt-3 text-sm font-semibold text-[var(--gold-soft)]">Service prices are shown for information only. Consultation charges are non-refundable.</p></div><div className="flex items-center gap-2 text-sm"><MessageCircle size={18} className="text-[var(--gold)]" /><span>Book through WhatsApp • Indu confirms the details</span></div></div>
-            <div className="mt-7 flex flex-wrap gap-3" aria-label="Choose service type">{(["Healing", "Guidance"] as const).map(tab => <button key={tab} onClick={() => setServiceTab(tab)} aria-pressed={serviceTab === tab} className={`rounded-full border px-6 py-3 text-sm font-extrabold tracking-wide transition ${serviceTab === tab ? "border-[var(--gold)] bg-[var(--gold)] text-[#2A0A4A] shadow-[0_0_22px_rgba(255,184,77,.45)]" : "border-[rgba(212,175,55,.45)] bg-[rgba(26,8,51,.55)] text-[var(--lavender-soft)] hover:border-[var(--gold)]"}`}>{tab}</button>)}</div>
+            <div className="mt-7 flex flex-wrap gap-3" aria-label="Choose service type">{(["Healing", "Guidance", "Numerology"] as const).map(tab => <button key={tab} onClick={() => setServiceTab(tab)} aria-pressed={serviceTab === tab} className={`rounded-full border px-6 py-3 text-sm font-extrabold tracking-wide transition ${serviceTab === tab ? "border-[var(--gold)] bg-[var(--gold)] text-[#2A0A4A] shadow-[0_0_22px_rgba(255,184,77,.45)]" : "border-[rgba(212,175,55,.45)] bg-[rgba(26,8,51,.55)] text-[var(--lavender-soft)] hover:border-[var(--gold)]"}`}>{tab}</button>)}</div>
             <p className="mt-4 text-sm text-[var(--muted)]" aria-live="polite">Showing {visibleServices.length} {serviceTab.toLowerCase()} services.</p>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {visibleServices.map((s) => <article key={s.name} className="tarot-card card-sheen group flex flex-col rounded-[24px] border border-[rgba(212,175,55,.4)] bg-[linear-gradient(165deg,rgba(67,26,112,.92),rgba(49,16,85,.94))] p-5 shadow-lg transition hover:-translate-y-1 hover:border-[var(--gold)] hover:shadow-[0_18px_45px_rgba(255,184,77,.22)]">
