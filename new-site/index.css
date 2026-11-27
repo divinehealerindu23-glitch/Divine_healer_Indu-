@@ -4,21 +4,21 @@
 @tailwind utilities;
 
 :root{
-  --royal:#2A0A4A;
-  --royal-2:#4B1D7A;
-  --royal-3:#1B0530;
-  --lavender:#C9A7EB;
-  --lavender-soft:#E6D6FF;
+  --royal:#241038;
+  --royal-2:#35204A;
+  --royal-3:#1A0B2E;
+  --lavender:#D4AF37;
+  --lavender-soft:#E8CB78;
   --gold:#D4AF37;
-  --gold-soft:#F5D67B;
-  --ink:#FFFDF8;
-  --muted:#D9C9F1;
-  --surface:#311055;
-  --card:#3B1661;
+  --gold-soft:#E8C45A;
+  --ink:#FFF9F0;
+  --muted:#D8CBE4;
+  --surface:#241038;
+  --card:#2C1642;
   --line:rgba(212,175,55,.32);
 }
 @media (prefers-color-scheme: dark){
-  :root{ --surface:#291043; --card:#34145B; }
+  :root{ --surface:#1F1032; --card:#2A173F; }
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
