@@ -372,7 +372,7 @@ export default function App() {
             border-color: rgba(239, 211, 147, .58) !important;
           }
           #root header.sticky a[href="#top"] > span:last-child > span:first-child {
-            font-family: Georgia, "Times New Roman", serif !important;
+            font-family: "Playfair Display", Georgia, serif !important;
             font-size: 14px !important;
             letter-spacing: -.02em;
           }
