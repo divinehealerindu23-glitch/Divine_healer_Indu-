@@ -294,7 +294,7 @@ export default function App() {
           body { background: #35234a !important; }
           #root section {
             background-color: #38264f !important;
-            background-image: linear-gradient(155deg, #493260 0%, #35234b 58%, #422b57 100%) !important;
+            background-image: linear-gradient(155deg, #241038 0%, #1A0B2E 58%, #241038 100%) !important;
           }
           /* Mobile hero: keep the tarot image atmospheric, never behind the text. */
           #root main#top > section > img {
@@ -305,7 +305,7 @@ export default function App() {
             padding: 1.2rem !important;
             border: 1px solid rgba(239, 211, 147, .62) !important;
             border-radius: 1.35rem !important;
-            background: linear-gradient(145deg, rgba(66, 43, 86, .97), rgba(37, 21, 55, .97)) !important;
+            background: linear-gradient(145deg, rgba(36, 16, 56, .97), rgba(26, 11, 46, .98)) !important;
             box-shadow: 0 18px 44px rgba(8, 2, 18, .34) !important;
             backdrop-filter: blur(12px);
           }
@@ -316,10 +316,12 @@ export default function App() {
             letter-spacing: -.035em;
           }
           #root .hero-scrim h1 .gold-text {
-            color: #FFE3A0 !important;
-            -webkit-text-fill-color: #FFE3A0 !important;
-            background: none !important;
-            text-shadow: 0 2px 18px rgba(255, 190, 86, .28) !important;
+            color: #D4AF37 !important;
+            -webkit-text-fill-color: #D4AF37 !important;
+            background: linear-gradient(100deg, #7A4A1E 0%, #D4AF37 48%, #F0D37A 72%, #5C3A1A 100%) !important;
+            -webkit-background-clip: text !important;
+            background-clip: text !important;
+            text-shadow: 0 2px 16px rgba(74, 44, 18, .48) !important;
           }
           #root .hero-scrim > p:not(:first-child) {
             color: #FFF9F0 !important;
@@ -360,7 +362,7 @@ export default function App() {
             letter-spacing: .16em !important;
           }
           #root header.sticky {
-            background: rgba(48, 29, 67, .98) !important;
+            background: rgba(36, 16, 56, .98) !important;
             border-color: rgba(239, 211, 147, .58) !important;
           }
           #root header.sticky a[href="#top"] > span:last-child > span:first-child {
@@ -369,13 +371,13 @@ export default function App() {
             letter-spacing: -.02em;
           }
           #root .tarot-card {
-            background-color: #604879 !important;
-            background-image: linear-gradient(150deg, #654c7d 0%, #49345f 100%) !important;
+            background-color: #2C1642 !important;
+            background-image: linear-gradient(150deg, #35204A 0%, #241038 100%) !important;
             border-color: rgba(239, 211, 147, .58) !important;
             box-shadow: 0 12px 28px rgba(15, 5, 25, .18) !important;
           }
           #root header.sticky {
-            background: rgba(63, 40, 82, .96) !important;
+            background: rgba(42, 23, 63, .98) !important;
             border-color: rgba(239, 211, 147, .58) !important;
           }
           #root section h2, #root section h3, #root section h4 {
@@ -386,10 +388,10 @@ export default function App() {
             background-image: linear-gradient(155deg, #493260 0%, #35234b 58%, #422b57 100%) !important;
           }
           #root #shop article {
-            background: linear-gradient(150deg, #654c7d, #49345f) !important;
+            background: linear-gradient(150deg, #35204A, #241038) !important;
             border-color: rgba(239, 211, 147, .58) !important;
           }
-          #root footer { background: #2d1d40 !important; }
+          #root footer { background: #1A0B2E !important; }
         }
       `}</style>
       {/* NAV — over the tarot image */}
