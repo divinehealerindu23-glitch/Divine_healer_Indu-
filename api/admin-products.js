@@ -14,6 +14,10 @@ function normalize(product) {
     price: clean(product.price, 50),
     stock,
     imageUrl: clean(product.imageUrl, 2000),
+    imageUrls: (Array.isArray(product.imageUrls) ? product.imageUrls : (product.imageUrl ? [product.imageUrl] : [])).slice(0, 12).map(url => clean(url, 2000)).filter(url => /^https:\/\//.test(url)),
+    enableAddToBag: product.enableAddToBag !== false,
+    enableWishlist: product.enableWishlist !== false,
+    enableBuyNow: product.enableBuyNow !== false,
     availability: stock === 0 && requested === "Available" ? "Out of Stock" : requested,
     updatedAt: new Date().toISOString()
   };
