@@ -116,6 +116,7 @@ const marqueeItems = ["Tarot Reading", "Akashic Reading", "Reiki Healing", "Chak
 
 export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [selectedService, setSelectedService] = useState("Tarot Card Reading");
   const [name, setName] = useState("");
@@ -327,7 +328,7 @@ export default function App() {
             <a className="hover:text-[var(--gold-soft)]" href="#about">About</a><a className="hover:text-[var(--gold-soft)]" href="#services">Services</a><a className="hover:text-[var(--gold-soft)]" href="#shop" onClick={() => window.dispatchEvent(new Event("dhi-open-shop"))}>Shop</a><a className="hover:text-[var(--gold-soft)]" href="#daily">Daily Message</a><a className="hover:text-[var(--gold-soft)]" href="#stories">Stories</a><a className="hover:text-[var(--gold-soft)]" href="#faq">FAQ</a><button className="hover:text-[var(--gold-soft)]" onClick={() => window.dispatchEvent(new Event("dhi-open-wishlist"))}>Wishlist</button><button className="inline-flex items-center gap-1.5 hover:text-[var(--gold-soft)]" onClick={() => window.dispatchEvent(new Event("dhi-open-bag"))}><ShoppingBag size={16}/> Bag</button>
           </nav>
           <div className="flex items-center gap-2">
-            <a href="#booking" className="shrink-0 rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[#2A0A4A] shadow-[0_0_24px_rgba(255,184,77,.35)] sm:px-4 sm:text-sm"><span className="sm:hidden">Book</span><span className="hidden sm:inline">Book Session</span></a>
+            <a href="#booking" onClick={(e) => { e.preventDefault(); setBookingOpen(true); setMenuOpen(false); }} className="shrink-0 rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[#2A0A4A] shadow-[0_0_24px_rgba(255,184,77,.35)] sm:px-4 sm:text-sm"><span className="sm:hidden">Book</span><span className="hidden sm:inline">Book Session</span></a>
             <button onClick={() => setMenuOpen(v => !v)} aria-expanded={menuOpen} className="shrink-0 rounded-full border border-white/20 px-3 py-2 text-xs font-semibold sm:text-sm lg:hidden">{menuOpen ? "Close" : "Menu"}</button>
           </div>
         </div>
@@ -475,10 +476,10 @@ export default function App() {
 
 
         {/* BOOKING — faded tarot image + heavy purple overlay */}
-        <section id="booking" className="relative scroll-mt-24 overflow-hidden px-4 py-14 sm:px-6 sm:py-20">
+        <section id="booking" aria-hidden={!bookingOpen} className={bookingOpen ? "fixed inset-0 z-[100] overflow-y-auto overscroll-contain px-3 py-5 sm:px-6 sm:py-8" : "hidden"}>
           <div aria-hidden="true" style={{ backgroundImage: `url(${tarotImage})`, backgroundSize: "cover", backgroundPosition: "center 70%", opacity: 0.2 }} className="absolute inset-0" />
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(26,8,51,.94),rgba(42,10,74,.90)_55%,rgba(26,8,51,.95))]" aria-hidden="true" />
-          <div className="relative mx-auto max-w-7xl">
+          <div className="relative mx-auto max-w-7xl"><div className="mb-3 flex justify-end"><button type="button" onClick={() => setBookingOpen(false)} className="rounded-full border border-[var(--gold)]/60 bg-[#1B0530] px-4 py-2 text-sm font-bold text-[var(--gold-soft)] shadow-lg" aria-label="Close booking form">✕ Close</button></div>
             <div className="reveal overflow-hidden rounded-[32px] border border-[rgba(212,175,55,.55)] bg-[linear-gradient(145deg,rgba(75,29,122,.96),rgba(42,10,74,.97))] shadow-[0_30px_80px_rgba(0,0,0,.35)]">
               <div className="grid lg:grid-cols-[.9fr_1.1fr]">
                 <div className="min-w-0 p-4 sm:p-9"><p className="text-xs font-extrabold uppercase tracking-[.28em] text-[var(--gold-soft)]">✦ Booking &amp; Contact</p><h2 className="font-serif-display mt-3 text-[clamp(2rem,5vw,3.2rem)] font-bold leading-tight">Your healing begins with one <span className="gold-text italic">brave step</span></h2><p className="mt-4 leading-relaxed text-[var(--muted)]">Share a few details, then send your booking request directly to Indu on WhatsApp.</p><div className="mt-7 space-y-4"><div className="flex items-center gap-4 rounded-2xl border border-[rgba(212,175,55,.4)] bg-black/15 p-4"><MessageCircle className="shrink-0 text-[var(--gold-soft)]" /><span><span className="block font-bold">Booking through WhatsApp</span><span className="text-sm text-[var(--muted)]">Indu will personally confirm availability, timing, and how your service will be provided.</span></span></div></div><a href={WHATSAPP} target="_blank" rel="noopener" className="mt-6 flex items-center justify-center gap-2 rounded-full bg-[#25D366] px-5 py-3.5 font-extrabold text-[#07331A]"><MessageCircle /> Message on WhatsApp</a></div>
