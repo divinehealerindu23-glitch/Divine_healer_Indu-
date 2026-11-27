@@ -130,7 +130,7 @@ export function ShopSection() {
             {showBuy&&<button disabled={p.stock<=0||priceNumber(p.price)<=0} onClick={()=>beginCheckout([{id:p.id,quantity:1}])} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#E8CE83] to-[#C79B38] px-4 py-3.5 text-xs font-extrabold uppercase tracking-[.12em] text-[#241035] disabled:opacity-40"><CreditCard size={16}/> Buy Now</button>}
           </div>
         </article>;
-      })}</div></div>)}
+      })}</div>}</div>)}
       <div className="mx-auto mt-14 max-w-3xl border-t border-[#D4AF37]/20 pt-8 text-center"><p className="font-cormorant text-xl italic text-[#E7D9F4]">“Choose with intention. Welcome with gratitude.”</p><p className="mt-2 text-[9px] font-bold uppercase tracking-[.28em] text-[#BCA7D2]">Secure online payment · Delhi appointments · WhatsApp assistance</p></div>
     </div>
 
