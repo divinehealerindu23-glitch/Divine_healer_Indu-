@@ -404,7 +404,7 @@ export default function App() {
       <header data-safe-area-sticky-top style={{ top: "var(--safe-area-inset-top)" }} className="sticky z-40 border-b border-[rgba(212,175,55,.35)] bg-[rgba(20,4,42,.82)] backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
           <div className="flex min-w-0 items-center gap-2 sm:gap-3"><ProfilePanel /><a href="#top" className="flex min-w-0 items-center gap-3">
-            <span className="grid h-9 w-9 shrink-0 place-items-center overflow-hidden rounded-full border border-[var(--gold)] bg-[var(--royal-2)] shadow-[0_0_18px_rgba(255,184,77,.35)] sm:h-11 sm:w-11"><img src={auraHealingImage} alt="Aura Healing" className="h-full w-full rounded-full object-cover" /></span>
+            <span className="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-full border-2 border-[var(--gold)] bg-[var(--royal-2)] shadow-[0_0_20px_rgba(212,175,55,.4)] ring-2 ring-[rgba(212,175,55,.16)] sm:h-12 sm:w-12"><img src={auraHealingImage} alt="Aura Healing" className="block aspect-square h-full w-full rounded-full object-cover object-center" /></span>
             <span className="min-w-0 leading-tight"><span className="font-serif-display block truncate text-[15px] font-bold sm:text-xl">Divine Healer Indu</span><span className="hidden text-[10px] uppercase tracking-[.18em] text-[var(--lavender)] sm:block sm:tracking-[.22em]">Reiki • Humkara • Haleem</span></span>
           </a></div>
           <nav className="hidden items-center gap-6 text-sm font-semibold lg:flex" aria-label="Main navigation">
