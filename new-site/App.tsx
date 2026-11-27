@@ -361,6 +361,12 @@ export default function App() {
             font-size: .66rem !important;
             letter-spacing: .16em !important;
           }
+          #root .hero-scrim button, #root header.sticky a[href="#booking"] {
+            background: #4A2C12 !important;
+            color: #D4AF37 !important;
+            border: 1px solid rgba(212,175,55,.72) !important;
+            box-shadow: 0 8px 24px rgba(10,4,18,.34) !important;
+          }
           #root header.sticky {
             background: rgba(36, 16, 56, .98) !important;
             border-color: rgba(239, 211, 147, .58) !important;
