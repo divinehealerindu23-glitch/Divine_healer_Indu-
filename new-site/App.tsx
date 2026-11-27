@@ -281,6 +281,41 @@ export default function App() {
 
   return (
     <div data-safe-area-inset-root style={{ boxSizing: "border-box", paddingTop: "var(--safe-area-inset-top)" }} className="min-h-screen overflow-x-clip bg-[var(--royal-3)] text-[var(--ink)]">
+      <style>{`
+        @media (max-width: 640px) {
+          body { background: #35234a !important; }
+          #root section {
+            background-color: #38264f !important;
+            background-image: linear-gradient(155deg, #493260 0%, #35234b 58%, #422b57 100%) !important;
+          }
+          #root section > .absolute.inset-0[aria-hidden="true"] {
+            opacity: .38 !important;
+            filter: brightness(1.45) saturate(.82);
+          }
+          #root .tarot-card {
+            background-color: #604879 !important;
+            background-image: linear-gradient(150deg, #654c7d 0%, #49345f 100%) !important;
+            border-color: rgba(239, 211, 147, .58) !important;
+            box-shadow: 0 12px 28px rgba(15, 5, 25, .18) !important;
+          }
+          #root header.sticky {
+            background: rgba(63, 40, 82, .96) !important;
+            border-color: rgba(239, 211, 147, .58) !important;
+          }
+          #root section h2, #root section h3, #root section h4 {
+            text-shadow: 0 1px 10px rgba(20, 8, 31, .16);
+          }
+          #root section p { text-shadow: none; }
+          #root #shop {
+            background-image: linear-gradient(155deg, #493260 0%, #35234b 58%, #422b57 100%) !important;
+          }
+          #root #shop article {
+            background: linear-gradient(150deg, #654c7d, #49345f) !important;
+            border-color: rgba(239, 211, 147, .58) !important;
+          }
+          #root footer { background: #2d1d40 !important; }
+        }
+      `}</style>
       {/* NAV — over the tarot image */}
       <header data-safe-area-sticky-top style={{ top: "var(--safe-area-inset-top)" }} className="sticky z-40 border-b border-[rgba(212,175,55,.35)] bg-[rgba(20,4,42,.82)] backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
