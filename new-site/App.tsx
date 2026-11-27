@@ -289,9 +289,77 @@ export default function App() {
             background-color: #38264f !important;
             background-image: linear-gradient(155deg, #493260 0%, #35234b 58%, #422b57 100%) !important;
           }
-          #root section > .absolute.inset-0[aria-hidden="true"] {
-            opacity: .38 !important;
-            filter: brightness(1.45) saturate(.82);
+          /* Mobile hero: keep the tarot image atmospheric, never behind the text. */
+          #root main#top > section > img {
+            filter: brightness(.48) saturate(.78) !important;
+          }
+          #root .hero-scrim {
+            width: 100%;
+            padding: 1.2rem !important;
+            border: 1px solid rgba(239, 211, 147, .62) !important;
+            border-radius: 1.35rem !important;
+            background: linear-gradient(145deg, rgba(66, 43, 86, .97), rgba(37, 21, 55, .97)) !important;
+            box-shadow: 0 18px 44px rgba(8, 2, 18, .34) !important;
+            backdrop-filter: blur(12px);
+          }
+          #root .hero-scrim h1 {
+            margin-top: .45rem !important;
+            font-size: clamp(2.55rem, 11vw, 3.35rem) !important;
+            line-height: .98 !important;
+            letter-spacing: -.035em;
+          }
+          #root .hero-scrim h1 .gold-text {
+            color: #FFE3A0 !important;
+            -webkit-text-fill-color: #FFE3A0 !important;
+            background: none !important;
+            text-shadow: 0 2px 18px rgba(255, 190, 86, .28) !important;
+          }
+          #root .hero-scrim > p:not(:first-child) {
+            color: #FFF9F0 !important;
+          }
+          #root .hero-scrim > p:nth-of-type(2) {
+            margin-top: 1.1rem !important;
+            margin-bottom: .35rem !important;
+            color: #F4D58A !important;
+            font-size: 1rem !important;
+            line-height: 1.45 !important;
+          }
+          #root .hero-scrim > p:nth-of-type(3) {
+            margin-top: .9rem !important;
+            font-size: 1rem !important;
+            line-height: 1.75 !important;
+          }
+          #root .hero-scrim > p:first-child {
+            display: inline-flex;
+            border-radius: 999px;
+            background: rgba(19, 8, 31, .48) !important;
+            padding: .55rem .75rem !important;
+            font-size: .62rem !important;
+            line-height: 1.45 !important;
+            letter-spacing: .08em !important;
+          }
+          #root .hero-scrim > div.mt-6 {
+            margin-top: 1.25rem !important;
+          }
+          #root .hero-scrim > div.mt-7 {
+            margin-top: 1.25rem !important;
+            gap: .7rem 1rem !important;
+            font-size: .82rem !important;
+          }
+          #root .hero-scrim > p.border-t {
+            margin-top: 1.25rem !important;
+            padding-top: .85rem !important;
+            font-size: .66rem !important;
+            letter-spacing: .16em !important;
+          }
+          #root header.sticky {
+            background: rgba(48, 29, 67, .98) !important;
+            border-color: rgba(239, 211, 147, .58) !important;
+          }
+          #root header.sticky a[href="#top"] > span:last-child > span:first-child {
+            font-family: Georgia, "Times New Roman", serif !important;
+            font-size: 14px !important;
+            letter-spacing: -.02em;
           }
           #root .tarot-card {
             background-color: #604879 !important;
