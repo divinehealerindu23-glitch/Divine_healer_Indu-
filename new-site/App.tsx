@@ -110,6 +110,13 @@ const divineMessages = [
   { title: "You Are Protected", text: "Heavy energy does not get the final word. Your light is stronger than what tried to dim it. Walk forward with your aura bright.", focus: "Today’s focus: protection and peace" },
   { title: "Love Is Healing", text: "Where there has been distance, let kindness speak first. Healing does not rush — it returns when both hearts feel safe.", focus: "Today’s focus: gentle connection" },
   { title: "A New Door Is Near", text: "What felt blocked was only gathering you for a better direction. Keep your heart open. The next chapter is already turning.", focus: "Today’s focus: new direction" },
+  { title: "Day 1 - New Beginning", text: "✨ Today, I release yesterday and welcome new blessings.\\nMy heart is open, my mind is calm, my path is clear.\\nDivine Healer Indu", focus: "Day 1 • New beginnings" },
+  { title: "Day 2 - Courage", text: "🔥 I am strong. I am protected. I am fearless.\\nNo negativity can touch me. I choose courage over fear today.\\nDivine Healer Indu", focus: "Day 2 • Courage over fear" },
+  { title: "Day 3 - Money & Abundance", text: "💰 Money flows to me easily and freely.\\nI am open to new income, new opportunities & new success.\\nAbundance is my birthright.\\nDivine Healer Indu", focus: "Day 3 • Money & abundance" },
+  { title: "Day 4 - Love & Healing", text: "💖 I deserve love, peace & respect.\\nI release pain, I forgive, I heal.\\nMy heart is healing beautifully.\\nDivine Healer Indu", focus: "Day 4 • Love & healing" },
+  { title: "Day 5 - Protection", text: "🛡️ I am surrounded by golden divine light.\\nEvil eye, jealousy & negativity cannot reach me.\\nI am safe, I am blessed, I am protected.\\nDivine Healer Indu", focus: "Day 5 • Protection" },
+  { title: "Day 6 - Letting Go", text: "🌙 I let go of what hurts me.\\nI cut all toxic cords and free my soul.\\nI am light, I am free, I am at peace.\\nDivine Healer Indu", focus: "Day 6 • Letting go" },
+  { title: "Day 7 - Gratitude & Manifestation", text: "🌟 I am grateful for everything I have.\\nMy wishes are already coming true.\\nThe Universe is working for me.\\nDivine Healer Indu", focus: "Day 7 • Gratitude & manifestation" },
 ];
 
 const marqueeItems = ["Tarot Reading", "Akashic Reading", "Reiki Healing", "Chakra Alignment", "Aura Cleansing", "Love Healing", "Money Healing", "Numerology", "Black Magic Removal", "Career Guidance"];
