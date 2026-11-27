@@ -1,172 +1,181 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, User } from "firebase/auth";
 import { auth } from "./firebase";
-import { ArrowLeft, ImagePlus, LogOut, Package, Plus, Save, ShoppingBag, Trash2, Upload, Boxes, Eye, EyeOff, Sparkles, MessageCircle } from "lucide-react";
+import { ArrowLeft, Heart, ImagePlus, LogOut, Package, Plus, Save, ShoppingBag, Trash2, Upload, Boxes, Eye, MessageCircle, Minus, X, CheckCircle2, CreditCard, ShoppingCart } from "lucide-react";
+
 type Product = {
-  id: string;
-  name: string;
-  description: string;
-  price: string;
-  stock: number;
-  imageUrl: string;
+  id: string; name: string; description: string; price: string; stock: number;
+  imageUrl: string; imageUrls?: string[];
   availability: "Available" | "Out of Stock" | "Hidden";
+  enableAddToBag?: boolean; enableWishlist?: boolean; enableBuyNow?: boolean;
   updatedAt?: string;
 };
-
-const blankProduct = (): Product => ({ id: "", name: "", description: "", price: "", stock: 0, imageUrl: "", availability: "Available" });
-const gold = "#D4AF37";
-const whatsapp = "https://wa.me/918920702407";
+type CartLine = { id: string; quantity: number };
+const productImages = (p: Product) => (Array.isArray(p.imageUrls) && p.imageUrls.length ? p.imageUrls : p.imageUrl ? [p.imageUrl] : []);
+const blankProduct = (): Product => ({ id:"", name:"", description:"", price:"", stock:0, imageUrl:"", imageUrls:[], availability:"Available", enableAddToBag:true, enableWishlist:true, enableBuyNow:true });
 const OWNER_EMAIL = "divinehealerindu23@gmail.com";
+const whatsapp = "https://wa.me/918920702407";
+const money = (value:number) => new Intl.NumberFormat("en-IN",{style:"currency",currency:"INR",maximumFractionDigits:2}).format(value);
+const priceNumber = (value:string) => { const n=Number(String(value||"").replace(/[^0-9.]/g,"")); return Number.isFinite(n)?n:0; };
 
 export function ShopSection() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  useEffect(() => {
-    fetch("/api/products").then(r => r.ok ? r.json() : Promise.reject()).then(data => setProducts(data.products || [])).catch(() => setProducts([])).finally(() => setLoading(false));
-  }, []);
+  const [products,setProducts]=useState<Product[]>([]);
+  const [loading,setLoading]=useState(true);
+  const [cart,setCart]=useState<CartLine[]>([]);
+  const [wishlist,setWishlist]=useState<string[]>([]);
+  const [bagOpen,setBagOpen]=useState(false);
+  const [wishOpen,setWishOpen]=useState(false);
+  const [checkoutOpen,setCheckoutOpen]=useState(false);
+  const [checkoutLines,setCheckoutLines]=useState<CartLine[]>([]);
+  const [customer,setCustomer]=useState({name:"",phone:"",address:"",email:""});
+  const [paying,setPaying]=useState(false);
+  const [checkoutError,setCheckoutError]=useState("");
+  const [successOrder,setSuccessOrder]=useState("");
+  const [gallery,setGallery]=useState<Record<string,number>>({});
+
+  async function loadProducts() {
+    try { const r=await fetch("/api/products",{cache:"no-store"}); const d=await r.json(); if(!r.ok)throw new Error(d.error||"Could not load products."); setProducts(d.products||[]); }
+    catch { setProducts([]); }
+    finally { setLoading(false); }
+  }
+  useEffect(()=>{ void loadProducts(); try { const c=JSON.parse(localStorage.getItem("dhi-cart")||"[]"); if(Array.isArray(c))setCart(c); const w=JSON.parse(localStorage.getItem("dhi-wishlist")||"[]"); if(Array.isArray(w))setWishlist(w); } catch {} },[]);
+  useEffect(()=>{localStorage.setItem("dhi-cart",JSON.stringify(cart));},[cart]);
+  useEffect(()=>{localStorage.setItem("dhi-wishlist",JSON.stringify(wishlist));},[wishlist]);
+
+  const cartCount=cart.reduce((n,x)=>n+x.quantity,0);
+  const linesFor=(items:CartLine[])=>items.map(line=>({line,product:products.find(p=>p.id===line.id)})).filter(x=>x.product) as {line:CartLine;product:Product}[];
+  const cartItems=linesFor(cart);
+  const wishItems=products.filter(p=>wishlist.includes(p.id));
+  const subtotal=(items:CartLine[])=>linesFor(items).reduce((sum,x)=>sum+priceNumber(x.product.price)*x.line.quantity,0);
+  const beginCheckout=(items:CartLine[])=>{setCheckoutLines(items);setCheckoutError("");setSuccessOrder("");setBagOpen(false);setWishOpen(false);setCheckoutOpen(true);};
+
+  function addToBag(p:Product) {
+    if(p.stock<=0)return;
+    setCart(old=>{const found=old.find(x=>x.id===p.id); if(found){if(found.quantity>=p.stock)return old;return old.map(x=>x.id===p.id?{...x,quantity:x.quantity+1}:x);}return [...old,{id:p.id,quantity:1}];});
+    setBagOpen(true);
+  }
+  function changeQty(id:string,delta:number) {
+    const p=products.find(x=>x.id===id);
+    setCart(old=>old.map(x=>x.id===id?{...x,quantity:Math.max(0,Math.min(p?.stock||0,x.quantity+delta))}:x).filter(x=>x.quantity>0));
+  }
+  function toggleWish(id:string){setWishlist(old=>old.includes(id)?old.filter(x=>x!==id):[...old,id]);}
+  async function payNow(e:React.FormEvent) {
+    e.preventDefault(); setPaying(true);setCheckoutError("");
+    try {
+      if(!customer.name.trim()||customer.phone.replace(/\D/g,"").length<10||!customer.address.trim())throw new Error("Please enter your name, a valid phone number and delivery address.");
+      const lines=linesFor(checkoutLines);
+      if(!lines.length)throw new Error("Your bag is empty.");
+      const orderRes=await fetch("/api/shop-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create",items:lines.map(x=>({id:x.product.id,quantity:x.line.quantity}))})});
+      const orderData=await orderRes.json(); if(!orderRes.ok||!orderData.success)throw new Error(orderData.error||"Could not start payment.");
+      const RazorpayCtor=(window as any).Razorpay;
+      if(!RazorpayCtor) {
+        await new Promise<void>((resolve,reject)=>{const script=document.createElement("script");script.src="https://checkout.razorpay.com/v1/checkout.js";script.onload=()=>resolve();script.onerror=()=>reject(new Error("Secure payment could not load. Please check your connection and try again."));document.body.appendChild(script);});
+      }
+      const Checkout=(window as any).Razorpay;
+      if(!Checkout)throw new Error("Secure payment is unavailable. Please try again.");
+      const checkout=new Checkout({
+        key:orderData.keyId,order_id:orderData.orderId,amount:orderData.amount,currency:"INR",
+        name:"Divine Healer Indu",description:"Online product order",
+        prefill:{name:customer.name,contact:customer.phone,email:customer.email},
+        theme:{color:"#D4AF37"},
+        modal:{ondismiss:()=>setPaying(false)},
+        handler:async (response:any)=>{
+          try {
+            const verify=await fetch("/api/shop-order",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+              action:"verify",razorpay_order_id:response.razorpay_order_id,razorpay_payment_id:response.razorpay_payment_id,razorpay_signature:response.razorpay_signature,
+              customer:{name:customer.name,phone:customer.phone,email:customer.email,address:customer.address}
+            })});
+            const result=await verify.json(); if(!verify.ok||!result.success)throw new Error(result.error||"Payment verification failed.");
+            setSuccessOrder(result.orderId||response.razorpay_order_id);setCheckoutLines([]);setCart(old=>old.filter(x=>!lines.some(y=>y.product.id===x.id)));await loadProducts();
+          } catch(err) {setCheckoutError(err instanceof Error?err.message:"Payment was received but order confirmation needs assistance. Please contact Indu with your payment ID.");}
+          finally {setPaying(false);}
+        }
+      });
+      checkout.on("payment.failed",(failure:any)=>{setCheckoutError(failure?.error?.description||"Payment was not completed. Your order has not been confirmed.");setPaying(false);});
+      checkout.open();
+    } catch(err){setCheckoutError(err instanceof Error?err.message:"Unable to start secure checkout.");setPaying(false);}
+  }
 
   return <section id="shop" className="relative isolate scroll-mt-24 overflow-hidden border-y border-[rgba(212,175,55,.34)] bg-[radial-gradient(ellipse_at_50%_0%,rgba(108,65,139,.34),transparent_52%),linear-gradient(180deg,#170526_0%,#241039_48%,#170526_100%)] px-4 py-20 sm:px-6 sm:py-24">
-    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-30" style={{backgroundImage:"radial-gradient(circle at 12% 22%,rgba(245,214,123,.18) 0 1px,transparent 2px),radial-gradient(circle at 82% 16%,rgba(201,167,235,.22) 0 1px,transparent 2px),radial-gradient(circle at 72% 76%,rgba(245,214,123,.16) 0 1px,transparent 2px)",backgroundSize:"110px 110px,150px 150px,180px 180px"}} />
-    <div aria-hidden="true" className="pointer-events-none absolute -right-28 top-12 -z-10 h-80 w-80 rounded-full border border-[#D4AF37]/20 opacity-50 sm:h-[28rem] sm:w-[28rem]"><div className="absolute inset-5 rounded-full border border-[#C9A7EB]/20"/><div className="absolute inset-12 rounded-full border border-[#D4AF37]/20"/><div className="absolute inset-20 rounded-full border border-[#C9A7EB]/15"/></div>
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-30" style={{backgroundImage:"radial-gradient(circle at 12% 22%,rgba(245,214,123,.18) 0 1px,transparent 2px),radial-gradient(circle at 82% 16%,rgba(201,167,235,.22) 0 1px,transparent 2px)",backgroundSize:"110px 110px,150px 150px"}}/>
     <div className="mx-auto max-w-7xl">
       <div className="mx-auto max-w-3xl text-center">
-        <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-[#D4AF37]/40 bg-[#2A0A4A]/60 px-5 py-2 text-[10px] font-extrabold uppercase tracking-[.32em] text-[#F5D67B] shadow-[0_8px_35px_rgba(0,0,0,.18)]"><span>✧</span> Curated with intention <span>✧</span></div>
+        <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-[#D4AF37]/40 bg-[#2A0A4A]/60 px-5 py-2 text-[10px] font-extrabold uppercase tracking-[.32em] text-[#F5D67B]">✧ Curated with intention ✧</div>
         <p className="font-cormorant text-lg italic tracking-[.12em] text-[#D9C4F0]">A little magic for your everyday rituals</p>
         <h2 className="font-serif-display mt-2 text-[clamp(2.6rem,6vw,4.7rem)] font-semibold leading-[1.05] text-[#FFF9EE]">The Divine <span className="gold-text italic">Collection</span></h2>
-        <div className="mx-auto mt-6 flex max-w-xs items-center gap-3"><span className="h-px flex-1 bg-gradient-to-r from-transparent to-[#D4AF37]/70"/><Sparkles size={17} className="text-[#F5D67B]"/><span className="h-px flex-1 bg-gradient-to-l from-transparent to-[#D4AF37]/70"/></div>
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-[#D8CBE8] sm:text-base">Thoughtfully chosen spiritual essentials and intention-led pieces, selected by Indu to accompany your personal journey.</p>
-      </div>
-
-      {loading ? <div className="mt-14 flex flex-col items-center gap-4 text-[#D8CBE8]"><span className="h-10 w-10 animate-spin rounded-full border-2 border-[#D4AF37]/25 border-t-[#F5D67B]"/><p className="font-cormorant text-xl italic">Opening the collection…</p></div> :
-      products.length === 0 ? <div className="relative mx-auto mt-14 max-w-xl rounded-[2rem] border border-[#D4AF37]/35 bg-[linear-gradient(145deg,rgba(255,255,255,.07),rgba(255,255,255,.025))] px-7 py-12 text-center shadow-[0_25px_70px_rgba(0,0,0,.24)]"><div className="mx-auto grid h-16 w-16 place-items-center rounded-full border border-[#D4AF37]/50 bg-[#2A0A4A] text-[#F5D67B] shadow-[0_0_35px_rgba(212,175,55,.13)]"><ShoppingBag size={27}/></div><p className="font-serif-display mt-5 text-2xl font-semibold text-[#FFF9EE]">A beautiful collection is on its way</p><p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-[#D8CBE8]">New treasures are being prepared with care. Contact Indu for current offerings and personal recommendations.</p><a className="mt-7 inline-flex items-center gap-2 rounded-full border border-[#E4C66B] bg-gradient-to-r from-[#E8CE83] to-[#C79B38] px-6 py-3 text-sm font-extrabold text-[#241035] shadow-[0_8px_28px_rgba(212,175,55,.2)] transition hover:-translate-y-0.5" href={whatsapp} target="_blank" rel="noreferrer"><MessageCircle size={17}/> Enquire with Indu</a></div> :
-      <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">{products.map((product, index) => <article key={product.id} className="group relative overflow-hidden rounded-[1.7rem] border border-[#D4AF37]/35 bg-[linear-gradient(155deg,rgba(255,255,255,.09),rgba(255,255,255,.025)_48%,rgba(201,167,235,.06))] p-[1px] shadow-[0_22px_55px_rgba(0,0,0,.25)] transition duration-500 hover:-translate-y-1.5 hover:border-[#F5D67B]/75 hover:shadow-[0_28px_65px_rgba(0,0,0,.36)]">
-        <div className="overflow-hidden rounded-[calc(1.7rem-1px)] bg-[#21102F]">
-          <div className="relative aspect-[4/4.4] overflow-hidden bg-[#12031F]">
-            {product.imageUrl ? <img src={product.imageUrl} alt={product.name} loading="lazy" className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-[1.055]"/> : <div className="grid h-full place-items-center text-[#D4AF37]"><Package size={52} strokeWidth={1.2}/></div>}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#160625]/75 via-transparent to-[#160625]/10"/>
-            <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full border border-[#F5D67B]/50 bg-[#1B082D]/80 px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[.2em] text-[#F5D67B] backdrop-blur-md"><Sparkles size={11}/> Selected by Indu</div>
-            <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3"><span className="font-cormorant text-lg italic text-white/90">A mindful choice</span><span className="rounded-full border border-[#F5D67B]/65 bg-[#1B082D]/85 px-3.5 py-2 text-sm font-bold text-[#F5D67B] shadow-lg backdrop-blur-md">{product.price ? (product.price.match(/[₹$€£]/) ? product.price : "₹"+product.price) : "Price on request"}</span></div>
-          </div>
-          <div className="relative p-5 sm:p-6">
-            <div className="mb-3 flex items-center gap-2"><span className="h-px w-7 bg-[#D4AF37]/75"/><span className="text-[9px] font-extrabold uppercase tracking-[.25em] text-[#C9A7EB]">The Divine Edit · {String(index + 1).padStart(2,"0")}</span></div>
-            <h3 className="font-serif-display text-[1.65rem] font-semibold leading-tight text-[#FFF9EE]">{product.name}</h3>
-            <p className="mt-3 min-h-[3.5rem] text-[13px] leading-6 text-[#D8CBE8]">{product.description || "A thoughtfully selected addition to your spiritual practice."}</p>
-            <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#D4AF37]/20 pt-4"><span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.16em] text-[#D9C4F0]"><span className="h-1.5 w-1.5 rounded-full bg-[#B7D6A1] shadow-[0_0_9px_rgba(183,214,161,.8)]"/>{product.stock > 0 && product.stock <= 3 ? "Limited pieces" : "Available to order"}</span><span className="font-cormorant text-sm italic text-[#F5D67B]">Made meaningful</span></div>
-            <a href={whatsapp+"?text="+encodeURIComponent("Namaste Indu, I would love to know more about: "+product.name+(product.price ? " (Price: "+product.price+")" : ""))} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-center gap-2 rounded-full border border-[#E4C66B] bg-gradient-to-r from-[#E8CE83] via-[#D4AF37] to-[#C79B38] px-5 py-3.5 text-[11px] font-extrabold uppercase tracking-[.12em] text-[#241035] shadow-[0_8px_24px_rgba(212,175,55,.16)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_30px_rgba(212,175,55,.28)]"><MessageCircle size={15}/> Enquire on WhatsApp</a>
-          </div>
+        <div className="mt-7 flex justify-center gap-3">
+          <button onClick={()=>{setBagOpen(true);setWishOpen(false);}} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 px-5 py-2.5 text-sm font-bold text-[#F5D67B]"><ShoppingBag size={17}/> Bag ({cartCount})</button>
+          <button onClick={()=>{setWishOpen(true);setBagOpen(false);}} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 px-5 py-2.5 text-sm font-bold text-[#F5D67B]"><Heart size={17}/> Wishlist ({wishlist.length})</button>
         </div>
-      </article>)}</div>}
-      <div className="mx-auto mt-14 flex max-w-3xl flex-col items-center gap-3 border-t border-[#D4AF37]/20 pt-8 text-center sm:mt-16"><p className="font-cormorant text-xl italic text-[#E7D9F4]">“Choose with intention. Welcome with gratitude.”</p><p className="text-[9px] font-bold uppercase tracking-[.28em] text-[#BCA7D2]">Personal assistance · Delhi appointments · WhatsApp orders</p><a href={whatsapp} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-2 text-xs font-bold text-[#F5D67B] transition hover:text-white"><MessageCircle size={15}/> Speak with Indu <span aria-hidden="true">↗</span></a></div>
+      </div>
+      {loading?<div className="mt-14 text-center text-[#D8CBE8]">Opening the collection…</div>:products.length===0?<div className="mt-14 rounded-3xl border border-[#D4AF37]/30 p-10 text-center text-[#D8CBE8]">New treasures are being prepared. <a className="text-[#F5D67B] underline" href={whatsapp} target="_blank" rel="noreferrer">Enquire with Indu</a></div>:
+      <div className="mt-14 grid gap-7 sm:grid-cols-2 lg:grid-cols-3 xl:gap-8">{products.map((p,index)=>{
+        const imgs=productImages(p); const active=gallery[p.id]||0; const showAdd=p.enableAddToBag!==false; const showWish=p.enableWishlist!==false; const showBuy=p.enableBuyNow!==false;
+        return <article key={p.id} className="group overflow-hidden rounded-[1.7rem] border border-[#D4AF37]/35 bg-[#21102F] shadow-[0_22px_55px_rgba(0,0,0,.25)]">
+          <div className="relative aspect-[4/4.1] overflow-hidden bg-[#12031F]">{imgs.length?<img src={imgs[Math.min(active,imgs.length-1)]} alt={p.name+" photo "+(active+1)} loading="lazy" className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.035]"/>:<div className="grid h-full place-items-center text-[#D4AF37]"><Package size={52}/></div>}
+            <div className="absolute left-4 top-4 rounded-full border border-[#F5D67B]/50 bg-[#1B082D]/85 px-3 py-1.5 text-[9px] font-extrabold uppercase tracking-[.2em] text-[#F5D67B]">Selected by Indu</div>
+            {imgs.length>1&&<><button aria-label="Previous product photo" onClick={()=>setGallery(g=>({...g,[p.id]:(active-1+imgs.length)%imgs.length}))} className="absolute left-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white">‹</button><button aria-label="Next product photo" onClick={()=>setGallery(g=>({...g,[p.id]:(active+1)%imgs.length}))} className="absolute right-3 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full bg-black/55 text-white">›</button><span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">{active+1} / {imgs.length}</span></>}
+            <span className="absolute bottom-4 right-4 rounded-full border border-[#F5D67B]/65 bg-[#1B082D]/90 px-3.5 py-2 text-sm font-bold text-[#F5D67B]">{priceNumber(p.price)>0?money(priceNumber(p.price)):"Price on request"}</span>
+          </div>
+          <div className="p-5 sm:p-6"><p className="mb-3 text-[9px] font-extrabold uppercase tracking-[.25em] text-[#C9A7EB]">The Divine Edit · {String(index+1).padStart(2,"0")}</p><h3 className="font-serif-display text-[1.65rem] font-semibold leading-tight text-[#FFF9EE]">{p.name}</h3><p className="mt-3 min-h-[3.5rem] text-[13px] leading-6 text-[#D8CBE8]">{p.description||"A thoughtfully selected addition to your spiritual practice."}</p>
+            <p className="mt-4 text-xs text-[#D9C4F0]">{p.stock<=3?"Only "+p.stock+" left":"In stock"} · {p.stock} available</p>
+            <div className="mt-5 grid grid-cols-2 gap-2">{showAdd&&<button disabled={p.stock<=0} onClick={()=>addToBag(p)} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37] px-3 py-3 text-xs font-extrabold text-[#F5D67B] disabled:opacity-40"><ShoppingBag size={15}/> Add to Bag</button>}{showWish&&<button onClick={()=>toggleWish(p.id)} className="inline-flex items-center justify-center gap-2 rounded-full border border-[#D4AF37]/50 px-3 py-3 text-xs font-extrabold text-[#F5D67B]"><Heart size={15} fill={wishlist.includes(p.id)?"currentColor":"none"}/>{wishlist.includes(p.id)?"Wishlisted":"Wishlist"}</button>}</div>
+            {showBuy&&<button disabled={p.stock<=0||priceNumber(p.price)<=0} onClick={()=>beginCheckout([{id:p.id,quantity:1}])} className="mt-2 flex w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#E8CE83] to-[#C79B38] px-4 py-3.5 text-xs font-extrabold uppercase tracking-[.12em] text-[#241035] disabled:opacity-40"><CreditCard size={16}/> Buy Now</button>}
+          </div>
+        </article>;
+      })}</div>}
+      <div className="mx-auto mt-14 max-w-3xl border-t border-[#D4AF37]/20 pt-8 text-center"><p className="font-cormorant text-xl italic text-[#E7D9F4]">“Choose with intention. Welcome with gratitude.”</p><p className="mt-2 text-[9px] font-bold uppercase tracking-[.28em] text-[#BCA7D2]">Secure online payment · Delhi appointments · WhatsApp assistance</p></div>
     </div>
+
+    {(bagOpen||wishOpen||checkoutOpen)&&<div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 p-0 sm:items-center sm:p-5" onMouseDown={e=>{if(e.target===e.currentTarget){setBagOpen(false);setWishOpen(false);setCheckoutOpen(false);}}}>
+      <div className="max-h-[92vh] w-full max-w-xl overflow-y-auto rounded-t-3xl border border-[#D4AF37]/40 bg-[#1B082D] p-5 text-[#FFF9EE] shadow-2xl sm:rounded-3xl sm:p-7">
+        <div className="flex items-center justify-between gap-3"><h3 className="font-serif-display text-2xl font-bold">{checkoutOpen?"Secure checkout":bagOpen?"Your shopping bag":"Your wishlist"}</h3><button onClick={()=>{setBagOpen(false);setWishOpen(false);setCheckoutOpen(false);}} aria-label="Close" className="rounded-full border border-white/20 p-2"><X size={18}/></button></div>
+        {bagOpen&&<><div className="mt-5 space-y-4">{cartItems.length===0?<p className="py-8 text-center text-[#D8CBE8]">Your bag is waiting for something special.</p>:cartItems.map(({line,product})=><div key={line.id} className="flex gap-3 border-b border-white/10 pb-4"><img src={productImages(product)[0]||""} alt="" className="h-20 w-20 rounded-xl bg-black/20 object-cover"/><div className="min-w-0 flex-1"><p className="font-bold">{product.name}</p><p className="mt-1 text-sm text-[#F5D67B]">{money(priceNumber(product.price))}</p><div className="mt-2 flex items-center gap-3"><button onClick={()=>changeQty(line.id,-1)} className="rounded-full border border-white/25 p-1"><Minus size={14}/></button><span>{line.quantity}</span><button onClick={()=>changeQty(line.id,1)} disabled={line.quantity>=product.stock} className="rounded-full border border-white/25 p-1 disabled:opacity-30"><Plus size={14}/></button><button onClick={()=>changeQty(line.id,-line.quantity)} className="ml-auto text-xs text-[#D9C4F0] underline">Remove</button></div></div><p className="font-bold">{money(priceNumber(product.price)*line.quantity)}</p></div>)}</div><div className="mt-5 flex justify-between border-t border-[#D4AF37]/30 pt-4 text-lg font-bold"><span>Bag subtotal</span><span className="text-[#F5D67B]">{money(subtotal(cart))}</span></div><p className="mt-2 text-xs text-[#CBBAD9]">Delivery charges, if applicable, will be confirmed before dispatch.</p><button disabled={!cartItems.length} onClick={()=>beginCheckout(cart)} className="mt-5 w-full rounded-full bg-[#D4AF37] px-5 py-3.5 font-extrabold text-[#241035] disabled:opacity-40">Continue to online checkout</button></>}
+        {wishOpen&&<div className="mt-5 space-y-3">{wishItems.length===0?<p className="py-8 text-center text-[#D8CBE8]">Your wishlist is empty.</p>:wishItems.map(p=><div key={p.id} className="flex items-center gap-3 rounded-xl border border-white/10 p-3"><img src={productImages(p)[0]||""} alt="" className="h-16 w-16 rounded-lg object-cover"/><div className="min-w-0 flex-1"><p className="font-bold">{p.name}</p><p className="text-sm text-[#F5D67B]">{money(priceNumber(p.price))}</p></div><button onClick={()=>toggleWish(p.id)} className="p-2 text-[#F5D67B]"><Heart fill="currentColor"/></button>{p.enableBuyNow!==false&&<button onClick={()=>beginCheckout([{id:p.id,quantity:1}])} disabled={p.stock<=0||priceNumber(p.price)<=0} className="rounded-full bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#241035] disabled:opacity-40">Buy</button>}</div>)}</div>}
+        {checkoutOpen&&<>{successOrder?<div className="py-8 text-center"><CheckCircle2 size={48} className="mx-auto text-[#D4AF37]"/><h4 className="mt-4 text-xl font-bold">Payment received</h4><p className="mt-2 text-sm text-[#D8CBE8]">Your order {successOrder} is confirmed. Indu will contact you about delivery.</p><button onClick={()=>{setCheckoutOpen(false);setSuccessOrder("");}} className="mt-5 rounded-full bg-[#D4AF37] px-6 py-3 font-bold text-[#241035]">Continue shopping</button></div>:<form onSubmit={payNow} className="mt-5 space-y-3"><div className="rounded-xl border border-[#D4AF37]/30 bg-white/5 p-4"><div className="space-y-2">{linesFor(checkoutLines).map(({line,product})=><div key={line.id} className="flex justify-between gap-3 text-sm"><span>{product.name} × {line.quantity}</span><b>{money(priceNumber(product.price)*line.quantity)}</b></div>)}</div><div className="mt-3 flex justify-between border-t border-white/15 pt-3 font-bold"><span>Total payable</span><span className="text-[#F5D67B]">{money(subtotal(checkoutLines))}</span></div></div><label className="block text-sm font-semibold">Full name<input required value={customer.name} onChange={e=>setCustomer(x=>({...x,name:e.target.value}))} className="mt-1 w-full rounded-xl bg-white px-4 py-3 text-[#241331]" placeholder="Your name"/></label><label className="block text-sm font-semibold">Phone number<input required inputMode="tel" value={customer.phone} onChange={e=>setCustomer(x=>({...x,phone:e.target.value}))} className="mt-1 w-full rounded-xl bg-white px-4 py-3 text-[#241331]" placeholder="10-digit mobile number"/></label><label className="block text-sm font-semibold">Email (optional)<input type="email" value={customer.email} onChange={e=>setCustomer(x=>({...x,email:e.target.value}))} className="mt-1 w-full rounded-xl bg-white px-4 py-3 text-[#241331]" placeholder="you@example.com"/></label><label className="block text-sm font-semibold">Delivery address<textarea required rows={3} value={customer.address} onChange={e=>setCustomer(x=>({...x,address:e.target.value}))} className="mt-1 w-full rounded-xl bg-white px-4 py-3 text-[#241331]" placeholder="House, street, area, city, state, PIN code"/></label>{checkoutError&&<p role="alert" className="rounded-xl bg-red-950 p-3 text-sm text-red-200">{checkoutError}</p>}<button disabled={paying||subtotal(checkoutLines)<=0} className="flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3.5 font-extrabold text-[#241035] disabled:opacity-50"><CreditCard size={17}/>{paying?"Processing secure payment…":"Pay "+money(subtotal(checkoutLines))+" online"}</button><p className="text-center text-xs text-[#CBBAD9]">Online payment only. Your order is confirmed after Razorpay payment verification.</p></form>}</>}
+      </div>
+    </div>}
   </section>;
 }
 
 export function AdminPortal() {
-  const [email, setEmail] = useState(OWNER_EMAIL);
-  const [password, setPassword] = useState("");
-  const [user, setUser] = useState<User | null>(null);
-  const loggedIn = Boolean(user && user.email?.toLowerCase() === OWNER_EMAIL && user.emailVerified);
-  const [checking, setChecking] = useState(false);
-  const [error, setError] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [editing, setEditing] = useState<Product>(blankProduct());
-  const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [notice, setNotice] = useState("");
-
-  async function adminHeaders(json = true) {
-    const current = auth.currentUser;
-    if (!current || current.email?.toLowerCase() !== OWNER_EMAIL || !current.emailVerified) throw new Error("Please sign in with the verified owner account.");
-    const token = await current.getIdToken();
-    return { ...(json ? { "Content-Type": "application/json" } : {}), Authorization: "Bearer " + token };
-  }
-  async function loadProducts() {
-    const r = await fetch("/api/admin-products", { headers: await adminHeaders(false) });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.error || "Could not load products.");
-    setProducts(data.products || []);
-  }
-  async function login(e: React.FormEvent) {
-    e.preventDefault(); setChecking(true); setError("");
-    try {
-      if (email.trim().toLowerCase() !== OWNER_EMAIL) throw new Error("Only the owner email account can access Stock Manager.");
-      const credential = await signInWithEmailAndPassword(auth, email.trim(), password);
-      if (credential.user.email?.toLowerCase() !== OWNER_EMAIL) { await signOut(auth); throw new Error("This account is not authorised."); }
-      if (!credential.user.emailVerified) throw new Error("Please verify the owner email address first, then sign in again.");
-      setUser(credential.user); setPassword(""); await loadProducts();
-    } catch (e) { setError(e instanceof Error ? e.message.replace("Firebase: ", "") : "Unable to sign in."); }
-    finally { setChecking(false); }
-  }
-  useEffect(() => onAuthStateChanged(auth, async current => {
-    if (current?.email?.toLowerCase() === OWNER_EMAIL && current.emailVerified) {
-      setUser(current);
-      try { await loadProducts(); } catch (e) { setError(e instanceof Error ? e.message : "Could not load products."); }
-    } else {
-      setUser(null); setProducts([]);
-    }
-  }), []);
-  async function saveProducts(next: Product[]) {
-    const r = await fetch("/api/admin-products",{method:"PUT",headers:await adminHeaders(),body:JSON.stringify({products:next})});
-    const data=await r.json(); if(!r.ok) throw new Error(data.error || "Could not save catalogue.");
-    setProducts(data.products || next);
-  }
-  async function saveProduct(e: React.FormEvent) {
-    e.preventDefault(); setSaving(true); setError(""); setNotice("");
-    try {
-      if(!editing.name.trim()) throw new Error("Please enter a product name.");
-      const product={...editing,id:editing.id || (typeof crypto!=="undefined" && "randomUUID" in crypto ? crypto.randomUUID() : String(Date.now())),name:editing.name.trim(),description:editing.description.trim(),price:editing.price.trim(),stock:Math.max(0,Number(editing.stock)||0),availability:editing.stock<=0 && editing.availability==="Available" ? "Out of Stock" as const : editing.availability,updatedAt:new Date().toISOString()};
-      const next=[...products.filter(p=>p.id!==product.id),product];
-      await saveProducts(next); setEditing(blankProduct()); setNotice("Product saved successfully.");
-    } catch(e) {setError(e instanceof Error?e.message:"Could not save product.");}
-    finally {setSaving(false);}
-  }
-  async function uploadImage(file?: File) {
-    if(!file) return;
-    setError(""); setNotice("");
-    if(!file.type.startsWith("image/")) {setError("Please choose an image file.");return;}
-    if(file.size>3*1024*1024) {setError("Please choose an image smaller than 3 MB.");return;}
-    setUploading(true);setNotice("Uploading your image…");
-    try {
-      const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const result=String(reader.result||"");const comma=result.indexOf(",");if(comma<0)reject(new Error("Could not read the selected image. Please try again."));else resolve(result.slice(comma+1));};reader.onerror=()=>reject(new Error("Could not read the selected image. Please try again."));reader.readAsDataURL(file);});
-      const r=await fetch("/api/admin-upload",{method:"POST",headers:await adminHeaders(),body:JSON.stringify({filename:file.name,mimeType:file.type||"image/jpeg",base64})});
-      const responseText=await r.text();
-      let data:any={};
-      try { data=JSON.parse(responseText); } catch { throw new Error("The upload server returned an unexpected response (HTTP "+r.status+"). Please try again."); }
-      if(!r.ok) throw new Error(data.error||("Image upload failed (HTTP "+r.status+")."));
-      if(typeof data.url!=="string" || !data.url.startsWith("https://")) throw new Error("The image was received, but the server did not return a valid image link. Please try again.");
-      setEditing(p=>({...p,imageUrl:data.url}));setNotice("Product image uploaded successfully. You can now save the product.");
-    } catch(e){setNotice("");setError(e instanceof Error?e.message:"Image upload failed. Please try again.");}
-    finally{setUploading(false);}
-  }
-  async function removeProduct(id:string) {
-    if(!window.confirm("Delete this product from your catalogue?"))return;
-    try{await saveProducts(products.filter(p=>p.id!==id));if(editing.id===id)setEditing(blankProduct());setNotice("Product deleted.");}
-    catch(e){setError(e instanceof Error?e.message:"Could not delete product.");}
-  }
-  async function logout() {
-    await signOut(auth);setUser(null);setProducts([]);setEditing(blankProduct());
-  }
+  const [email,setEmail]=useState(OWNER_EMAIL),[password,setPassword]=useState(""),[user,setUser]=useState<User|null>(null);
+  const loggedIn=Boolean(user&&user.email?.toLowerCase()===OWNER_EMAIL&&user.emailVerified);
+  const [checking,setChecking]=useState(false),[error,setError]=useState(""),[products,setProducts]=useState<Product[]>([]);
+  const [editing,setEditing]=useState<Product>(blankProduct()),[saving,setSaving]=useState(false),[uploading,setUploading]=useState(false),[notice,setNotice]=useState("");
+  async function adminHeaders(json=true){const current=auth.currentUser;if(!current||current.email?.toLowerCase()!==OWNER_EMAIL||!current.emailVerified)throw new Error("Please sign in with the verified owner account.");return {...(json?{"Content-Type":"application/json"}:{}),Authorization:"Bearer "+await current.getIdToken()};}
+  async function loadProducts(){const r=await fetch("/api/admin-products",{headers:await adminHeaders(false)});const d=await r.json();if(!r.ok)throw new Error(d.error||"Could not load products.");setProducts(d.products||[]);}
+  async function login(e:React.FormEvent){e.preventDefault();setChecking(true);setError("");try{if(email.trim().toLowerCase()!==OWNER_EMAIL)throw new Error("Only the owner email account can access Stock Manager.");const c=await signInWithEmailAndPassword(auth,email.trim(),password);if(c.user.email?.toLowerCase()!==OWNER_EMAIL){await signOut(auth);throw new Error("This account is not authorised.");}if(!c.user.emailVerified)throw new Error("Please verify the owner email address first.");setUser(c.user);setPassword("");await loadProducts();}catch(e){setError(e instanceof Error?e.message.replace("Firebase: ",""):"Unable to sign in.");}finally{setChecking(false);}}
+  useEffect(()=>onAuthStateChanged(auth,async current=>{if(current?.email?.toLowerCase()===OWNER_EMAIL&&current.emailVerified){setUser(current);try{await loadProducts();}catch(e){setError(e instanceof Error?e.message:"Could not load products.");}}else{setUser(null);setProducts([]);}}),[]);
+  async function saveProducts(next:Product[]){const r=await fetch("/api/admin-products",{method:"PUT",headers:await adminHeaders(),body:JSON.stringify({products:next})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Could not save catalogue.");setProducts(d.products||next);}
+  async function saveProduct(e:React.FormEvent){e.preventDefault();setSaving(true);setError("");setNotice("");try{if(!editing.name.trim())throw new Error("Please enter a product name.");const product={...editing,id:editing.id||(crypto.randomUUID?.()||String(Date.now())),imageUrls:productImages(editing),imageUrl:productImages(editing)[0]||"",name:editing.name.trim(),description:editing.description.trim(),price:editing.price.trim(),stock:Math.max(0,Number(editing.stock)||0),updatedAt:new Date().toISOString()};const next=[...products.filter(p=>p.id!==product.id),product];await saveProducts(next);setEditing(blankProduct());setNotice("Product saved successfully.");}catch(e){setError(e instanceof Error?e.message:"Could not save product.");}finally{setSaving(false);}}
+  async function uploadImage(file?:File){if(!file)return;setError("");setNotice("");if(!["image/jpeg","image/png","image/webp","image/gif"].includes(file.type)){setError("Please choose a JPG, PNG, WebP or GIF image.");return;}if(file.size>3*1024*1024){setError("Please choose an image smaller than 3 MB.");return;}setUploading(true);setNotice("Uploading image…");try{const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>{const s=String(reader.result||"");const i=s.indexOf(",");if(i<0)reject(new Error("Could not read image."));else resolve(s.slice(i+1));};reader.onerror=()=>reject(new Error("Could not read image."));reader.readAsDataURL(file);});const r=await fetch("/api/admin-upload",{method:"POST",headers:await adminHeaders(),body:JSON.stringify({filename:file.name,mimeType:file.type,base64})});const d=await r.json();if(!r.ok)throw new Error(d.error||"Image upload failed.");if(!d.url?.startsWith("https://"))throw new Error("The server did not return a valid image link.");setEditing(p=>{const urls=productImages(p);return {...p,imageUrls:[...urls,d.url],imageUrl:urls[0]||d.url};});setNotice("Image added. You can upload more photos or save the product.");}catch(e){setNotice("");setError(e instanceof Error?e.message:"Image upload failed.");}finally{setUploading(false);}}
+  async function removeProduct(id:string){if(!window.confirm("Delete this product from your catalogue?"))return;try{await saveProducts(products.filter(p=>p.id!==id));if(editing.id===id)setEditing(blankProduct());setNotice("Product deleted.");}catch(e){setError(e instanceof Error?e.message:"Could not delete product.");}}
+  async function logout(){await signOut(auth);setUser(null);setProducts([]);setEditing(blankProduct());}
   const input="mt-2 w-full rounded-xl border border-[#d7c8e7] bg-white px-4 py-3 text-[#241331] outline-none focus:border-[#B68A24]";
-  return <div className="min-h-screen bg-[#160624] px-4 py-8 text-[#F7F0FF] sm:px-6">
-    <div className="mx-auto max-w-6xl">
-      <header className="mb-8 flex items-center justify-between gap-4 border-b border-[rgba(212,175,55,.35)] pb-5"><div><a href="/" className="text-xs uppercase tracking-[.2em] text-[#D4AF37]">← Divine Healer Indu</a><h1 className="font-serif-display mt-2 text-3xl font-bold sm:text-4xl">Product Admin</h1><p className="mt-1 text-sm text-[#CBBAD9]">Manage your collection, prices, stock and availability.</p></div>{loggedIn&&<button onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]"><LogOut size={16}/> Sign out</button>}</header>
-      {!loggedIn ? <form onSubmit={login} className="mx-auto mt-16 max-w-md rounded-[28px] border border-[rgba(212,175,55,.45)] bg-white/5 p-7 shadow-2xl"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#D4AF37] text-[#D4AF37]"><Boxes size={26}/></div><h2 className="font-serif-display mt-5 text-center text-2xl font-bold">Admin access</h2><p className="mt-2 text-center text-sm text-[#CBBAD9]">Only the verified owner account can manage products and stock.</p><label className="mt-6 block text-sm font-bold" htmlFor="admin-email">Owner email</label><input id="admin-email" type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} className={input} required/><label className="mt-4 block text-sm font-bold" htmlFor="admin-password">Account password</label><input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className={input} required/><button disabled={checking} className="mt-5 w-full rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60">{checking?"Signing in…":"Sign in with owner account"}</button>{error&&<p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}</form> :
-      <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
-        <form onSubmit={saveProduct} className="h-fit rounded-[26px] border border-[rgba(212,175,55,.4)] bg-white/5 p-6">
-          <div className="flex items-center justify-between gap-3"><h2 className="font-serif-display text-2xl font-bold">{editing.id?"Edit product":"Add a product"}</h2><button type="button" onClick={()=>{setEditing(blankProduct());setError("");}} className="text-sm text-[#F1D98B]">Clear form</button></div>
-          <label className="mt-5 block text-sm font-bold">Product name<input className={input} value={editing.name} onChange={e=>setEditing(p=>({...p,name:e.target.value}))} placeholder="e.g. Crystal Healing Set" required/></label>
-          <label className="mt-4 block text-sm font-bold">Description<textarea className={input} rows={3} value={editing.description} onChange={e=>setEditing(p=>({...p,description:e.target.value}))} placeholder="Describe your product…"/></label>
-          <div className="mt-4 grid grid-cols-2 gap-4"><label className="block text-sm font-bold">Price<input className={input} value={editing.price} onChange={e=>setEditing(p=>({...p,price:e.target.value}))} placeholder="e.g. 999"/></label><label className="block text-sm font-bold">Stock quantity<input className={input} type="number" min="0" step="1" value={editing.stock} onChange={e=>setEditing(p=>({...p,stock:Math.max(0,Number(e.target.value))}))}/></label></div>
-          <label className="mt-4 block text-sm font-bold">Availability<select className={input} value={editing.availability} onChange={e=>setEditing(p=>({...p,availability:e.target.value as Product["availability"]}))}><option>Available</option><option>Out of Stock</option><option>Hidden</option></select></label>
-          <div className="mt-5"><span className="text-sm font-bold">Product image</span><div className="mt-2 flex items-center gap-4">{editing.imageUrl?<img src={editing.imageUrl} alt="Product preview" className="h-24 w-24 rounded-xl object-cover"/>:<div className="grid h-24 w-24 place-items-center rounded-xl border border-dashed border-[#9E86B5] text-[#D4AF37]"><ImagePlus size={28}/></div>}<label className="cursor-pointer rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">{uploading?"Uploading…":<><Upload className="mr-2 inline" size={15}/>Upload image</>}<input type="file" accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" className="hidden" disabled={uploading} onChange={e=>{const file=e.currentTarget.files?.[0];e.currentTarget.value="";void uploadImage(file);}}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">Choose a photo from your phone or computer • JPG, PNG, WebP or GIF • maximum 3 MB</p></div>
-          {error&&<p role="alert" className="mt-4 rounded-xl bg-red-950/60 p-3 text-sm text-red-200">{error}</p>}{notice&&<p className="mt-4 rounded-xl bg-emerald-950/60 p-3 text-sm text-emerald-200">{notice}</p>}
-          <button disabled={saving||uploading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60"><Save size={17}/>{saving?"Saving…":"Save product"}</button>
-        </form>
-        <section><div className="mb-4 flex items-center justify-between"><h2 className="font-serif-display text-2xl font-bold">Stock manager</h2><span className="rounded-full border border-[#D4AF37]/50 px-3 py-1 text-sm text-[#F1D98B]">{products.length} products</span></div>
-          {products.length===0?<div className="rounded-2xl border border-dashed border-[#806A91] p-8 text-center text-[#CBBAD9]"><Package className="mx-auto mb-3 text-[#D4AF37]" size={32}/>No products yet. Add your first product using the form.</div>:<div className="space-y-3">{products.map(p=><article key={p.id} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center"><div className="flex min-w-0 flex-1 items-center gap-4">{p.imageUrl?<img src={p.imageUrl} alt="" className="h-16 w-16 rounded-xl object-cover"/>:<div className="grid h-16 w-16 place-items-center rounded-xl bg-black/20 text-[#D4AF37]"><Package/></div>}<div className="min-w-0"><h3 className="truncate font-bold">{p.name}</h3><p className="text-sm text-[#CBBAD9]">{p.price ? "₹"+p.price.replace(/^₹/,"") : "Price on request"} • Stock: {p.stock}</p><span className="mt-1 inline-block text-xs text-[#F1D98B]">{p.availability}</span></div></div><div className="flex flex-wrap gap-2"><button onClick={()=>{setEditing(p);setError("");setNotice("");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">Edit</button><button onClick={()=>saveProducts(products.map(x=>x.id===p.id?{...x,stock:Math.max(0,x.stock-1),availability:x.stock-1<=0?"Out of Stock":x.availability}:x))} className="rounded-full border border-white/20 px-3 py-2 text-sm">−1</button><button onClick={()=>saveProducts(products.map(x=>x.id===p.id?{...x,stock:x.stock+1,availability:x.availability==="Out of Stock"?"Available":x.availability}:x))} className="rounded-full border border-white/20 px-3 py-2 text-sm">+1</button><button onClick={()=>removeProduct(p.id)} aria-label={"Delete "+p.name} className="rounded-full border border-red-400/40 px-3 py-2 text-red-300"><Trash2 size={16}/></button></div></article>)}</div>}
-          <div className="mt-5 rounded-2xl border border-[rgba(212,175,55,.25)] bg-white/5 p-4 text-sm text-[#CBBAD9]"><p className="flex items-center gap-2 font-bold text-[#F1D98B]"><Eye size={16}/> Store visibility</p><p className="mt-1">Only products marked “Available” with stock above zero appear in the public shop. Choose “Hidden” to keep a product private.</p></div>
-        </section>
-      </div>}
-      <p className="mt-12 text-center text-xs text-[#8F7B9E]">Divine Healer Indu • Secure product administration</p>
-    </div></div>;
+  const toggle=(key:"enableAddToBag"|"enableWishlist"|"enableBuyNow",label:string)=><label className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-sm"><span>{label}</span><input type="checkbox" checked={editing[key]!==false} onChange={e=>setEditing(p=>({...p,[key]:e.target.checked}))} className="h-5 w-5 accent-[#D4AF37]"/></label>;
+  return <div className="min-h-screen bg-[#160624] px-4 py-8 text-[#F7F0FF] sm:px-6"><div className="mx-auto max-w-6xl">
+    <header className="mb-8 flex items-center justify-between gap-4 border-b border-[rgba(212,175,55,.35)] pb-5"><div><a href="/" className="text-xs uppercase tracking-[.2em] text-[#D4AF37]">← Divine Healer Indu</a><h1 className="font-serif-display mt-2 text-3xl font-bold sm:text-4xl">Product Admin</h1><p className="mt-1 text-sm text-[#CBBAD9]">Manage products, photos, prices, stock and shop buttons.</p></div>{loggedIn&&<button onClick={logout} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]"><LogOut size={16}/> Sign out</button>}</header>
+    {!loggedIn?<form onSubmit={login} className="mx-auto mt-16 max-w-md rounded-[28px] border border-[rgba(212,175,55,.45)] bg-white/5 p-7 shadow-2xl"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full border border-[#D4AF37] text-[#D4AF37]"><Boxes size={26}/></div><h2 className="font-serif-display mt-5 text-center text-2xl font-bold">Admin access</h2><p className="mt-2 text-center text-sm text-[#CBBAD9]">Only the verified owner account can manage products and stock.</p><label className="mt-6 block text-sm font-bold">Owner email<input type="email" autoComplete="username" value={email} onChange={e=>setEmail(e.target.value)} className={input} required/></label><label className="mt-4 block text-sm font-bold">Account password<input type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} className={input} required/></label><button disabled={checking} className="mt-5 w-full rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331]">{checking?"Signing in…":"Sign in with owner account"}</button>{error&&<p role="alert" className="mt-4 text-sm text-red-300">{error}</p>}</form>:
+    <div className="grid gap-8 lg:grid-cols-[.9fr_1.1fr]">
+      <form onSubmit={saveProduct} className="h-fit rounded-[26px] border border-[rgba(212,175,55,.4)] bg-white/5 p-6">
+        <div className="flex items-center justify-between gap-3"><h2 className="font-serif-display text-2xl font-bold">{editing.id?"Edit product":"Add a product"}</h2><button type="button" onClick={()=>{setEditing(blankProduct());setError("");setNotice("");}} className="text-sm text-[#F1D98B]">Clear form</button></div>
+        <label className="mt-5 block text-sm font-bold">Product name<input className={input} value={editing.name} onChange={e=>setEditing(p=>({...p,name:e.target.value}))} placeholder="e.g. Crystal Healing Set" required/></label>
+        <label className="mt-4 block text-sm font-bold">Description<textarea className={input} rows={3} value={editing.description} onChange={e=>setEditing(p=>({...p,description:e.target.value}))} placeholder="Describe your product…"/></label>
+        <div className="mt-4 grid grid-cols-2 gap-4"><label className="block text-sm font-bold">Price (₹)<input className={input} type="number" min="0.01" step="0.01" value={editing.price.replace(/[^0-9.]/g,"")} onChange={e=>setEditing(p=>({...p,price:e.target.value}))} placeholder="e.g. 999" required/></label><label className="block text-sm font-bold">Stock quantity<input className={input} type="number" min="0" step="1" value={editing.stock} onChange={e=>setEditing(p=>({...p,stock:Math.max(0,Number(e.target.value))}))}/></label></div>
+        <label className="mt-4 block text-sm font-bold">Availability<select className={input} value={editing.availability} onChange={e=>setEditing(p=>({...p,availability:e.target.value as Product["availability"]}))}><option>Available</option><option>Out of Stock</option><option>Hidden</option></select></label>
+        <div className="mt-5"><span className="text-sm font-bold">Product photos</span><div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">{productImages(editing).map((url,i)=><div key={url} className="relative aspect-square"><img src={url} alt={"Product photo "+(i+1)} className="h-full w-full rounded-xl object-cover"/><button type="button" onClick={()=>setEditing(p=>{const urls=productImages(p).filter((_,n)=>n!==i);return {...p,imageUrls:urls,imageUrl:urls[0]||""};})} className="absolute right-1 top-1 rounded-full bg-black/75 p-1.5 text-white" aria-label="Remove photo"><Trash2 size={13}/></button></div>)}
+          <label className="flex aspect-square cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-[#9E86B5] text-center text-[#F1D98B]"><ImagePlus size={25}/><span className="mt-1 text-[11px] font-bold">Add photo</span><input type="file" multiple accept=".jpg,.jpeg,.png,.webp,.gif,image/jpeg,image/png,image/webp,image/gif" className="hidden" disabled={uploading} onChange={e=>{const files=Array.from(e.currentTarget.files||[]);e.currentTarget.value="";void (async()=>{for(const file of files)await uploadImage(file);})();}}/></label></div><p className="mt-2 text-xs text-[#CBBAD9]">Upload multiple JPG, PNG, WebP or GIF photos. Each photo can be up to 3 MB.</p></div>
+        <div className="mt-6"><p className="mb-3 text-sm font-bold text-[#F1D98B]">Customer shopping buttons</p><div className="grid gap-2 sm:grid-cols-3">{toggle("enableAddToBag","Add to Bag")}{toggle("enableWishlist","Wishlist")}{toggle("enableBuyNow","Buy Now")}</div><p className="mt-2 text-xs text-[#CBBAD9]">Turn each button on or off separately for this product.</p></div>
+        {error&&<p role="alert" className="mt-4 rounded-xl bg-red-950/60 p-3 text-sm text-red-200">{error}</p>}{notice&&<p className="mt-4 rounded-xl bg-emerald-950/60 p-3 text-sm text-emerald-200">{notice}</p>}
+        <button disabled={saving||uploading} className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-[#D4AF37] px-5 py-3 font-extrabold text-[#241331] disabled:opacity-60"><Save size={17}/>{saving?"Saving…":"Save product"}</button>
+      </form>
+      <section><div className="mb-4 flex items-center justify-between"><h2 className="font-serif-display text-2xl font-bold">Stock manager</h2><span className="rounded-full border border-[#D4AF37]/50 px-3 py-1 text-sm text-[#F1D98B]">{products.length} products</span></div>
+        {products.length===0?<div className="rounded-2xl border border-dashed border-[#806A91] p-8 text-center text-[#CBBAD9]"><Package className="mx-auto mb-3 text-[#D4AF37]" size={32}/>No products yet. Add your first product using the form.</div>:<div className="space-y-3">{products.map(p=><article key={p.id} className="flex flex-col gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:flex-row sm:items-center"><div className="flex min-w-0 flex-1 items-center gap-4">{productImages(p)[0]?<img src={productImages(p)[0]} alt="" className="h-16 w-16 rounded-xl object-cover"/>:<div className="grid h-16 w-16 place-items-center rounded-xl bg-black/20 text-[#D4AF37]"><Package/></div>}<div className="min-w-0"><h3 className="truncate font-bold">{p.name}</h3><p className="text-sm text-[#CBBAD9]">{money(priceNumber(p.price))} • Stock: {p.stock} • {productImages(p).length} photos</p><span className="mt-1 inline-block text-xs text-[#F1D98B]">{p.availability}</span></div></div><div className="flex flex-wrap gap-2"><button onClick={()=>{setEditing({...p,imageUrls:productImages(p)});setError("");setNotice("");window.scrollTo({top:0,behavior:"smooth"});}} className="rounded-full border border-[#D4AF37] px-4 py-2 text-sm font-bold text-[#F1D98B]">Edit</button><button onClick={()=>void saveProducts(products.map(x=>x.id===p.id?{...x,stock:Math.max(0,x.stock-1),availability:x.stock-1<=0?"Out of Stock":x.availability}:x))} className="rounded-full border border-white/20 px-3 py-2 text-sm">−1</button><button onClick={()=>void saveProducts(products.map(x=>x.id===p.id?{...x,stock:x.stock+1,availability:x.availability==="Out of Stock"?"Available":x.availability}:x))} className="rounded-full border border-white/20 px-3 py-2 text-sm">+1</button><button onClick={()=>void removeProduct(p.id)} aria-label={"Delete "+p.name} className="rounded-full border border-red-400/40 px-3 py-2 text-red-300"><Trash2 size={16}/></button></div></article>)}</div>}
+        <div className="mt-5 rounded-2xl border border-[rgba(212,175,55,.25)] bg-white/5 p-4 text-sm text-[#CBBAD9]"><p className="flex items-center gap-2 font-bold text-[#F1D98B]"><Eye size={16}/> Store visibility</p><p className="mt-1">Only products marked “Available” with stock above zero appear in the public shop. Hidden products stay private.</p></div>
+      </section>
+    </div>}
+    <p className="mt-12 text-center text-xs text-[#8F7B9E]">Divine Healer Indu • Secure product administration</p>
+  </div></div>;
 }
