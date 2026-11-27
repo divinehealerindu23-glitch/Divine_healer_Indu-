@@ -98,7 +98,7 @@ export function ShopSection() {
     } catch(err){setCheckoutError(err instanceof Error?err.message:"Unable to start secure checkout.");setPaying(false);}
   }
 
-  return <section id="shop" className="relative isolate scroll-mt-24 overflow-hidden border-y border-[rgba(212,175,55,.34)] bg-[radial-gradient(ellipse_at_50%_0%,rgba(108,65,139,.34),transparent_52%),linear-gradient(180deg,#170526_0%,#241039_48%,#170526_100%)] px-4 py-20 sm:px-6 sm:py-24">
+  return <section id="shop" className={showAllProducts ? "fixed inset-0 z-[100] min-h-screen overflow-y-auto overscroll-contain border-y border-[rgba(212,175,55,.34)] bg-[radial-gradient(ellipse_at_50%_0%,rgba(108,65,139,.34),transparent_52%),linear-gradient(180deg,#170526_0%,#241039_48%,#170526_100%)] px-4 py-8 sm:px-6 sm:py-10" : "relative isolate overflow-hidden border-y border-[rgba(212,175,55,.34)] bg-[radial-gradient(ellipse_at_50%_0%,rgba(108,65,139,.34),transparent_52%),linear-gradient(180deg,#170526_0%,#241039_48%,#170526_100%)] px-4 py-20 sm:px-6 sm:py-24"}>
     <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 opacity-30" style={{backgroundImage:"radial-gradient(circle at 12% 22%,rgba(245,214,123,.18) 0 1px,transparent 2px),radial-gradient(circle at 82% 16%,rgba(201,167,235,.22) 0 1px,transparent 2px)",backgroundSize:"110px 110px,150px 150px"}}/>
     <div className="mx-auto max-w-7xl">
       <div className="mx-auto max-w-3xl text-center">
@@ -107,6 +107,7 @@ export function ShopSection() {
         <h2 className="font-serif-display mt-2 text-[clamp(2.6rem,6vw,4.7rem)] font-semibold leading-[1.05] text-[#FFF9EE]">The Divine <span className="gold-text italic">Collection</span></h2>
         <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-[#D8CBE8] sm:text-base">Thoughtfully chosen spiritual essentials and intention-led pieces, selected by Indu to accompany your personal journey.</p>
         <div className="mt-7 flex justify-center gap-3">
+          {showAllProducts&&<button onClick={()=>setShowAllProducts(false)} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 px-5 py-2.5 text-sm font-bold text-[#F5D67B]"><X size={17}/> Close Products</button>}
           <button onClick={()=>{setBagOpen(true);setWishOpen(false);}} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 px-5 py-2.5 text-sm font-bold text-[#F5D67B]"><ShoppingBag size={17}/> Bag ({cartCount})</button>
           <button onClick={()=>{setWishOpen(true);setBagOpen(false);}} className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 px-5 py-2.5 text-sm font-bold text-[#F5D67B]"><Heart size={17}/> Wishlist ({wishlist.length})</button>
         </div>
